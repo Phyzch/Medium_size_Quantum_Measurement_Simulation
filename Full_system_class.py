@@ -22,7 +22,8 @@ def wave_func_sum(original_value, part_add, index):
     '''
     len = np.shape(index)[0]
     for i in range(len):
-        original_value[index[i]] = original_value[index[i]] + part_add[i]
+        index_i = index[i]
+        original_value[index_i] = original_value[index_i] + part_add[i]
 
     return original_value
 
@@ -66,6 +67,7 @@ class full_system():
         self.irow_diagonal_part = []
         self.icol_diagonal_part = []
 
+        # index for coupling in detector1 and detector2 in full system matrix.
         self.detector1_coupling_irow = []
         self.detector1_coupling_icol = []
         self.detector1_coupling_dmat_index = []
@@ -137,21 +139,21 @@ class full_system():
                     self.mat_detector2.append(self.detector2.State_energy_list[k])
 
 
-        self.mat_diagonal_part = self.mat
-        self.irow_diagonal_part = self.irow
-        self.icol_diagonal_part = self.icol
+        self.mat_diagonal_part = self.mat.copy()
+        self.irow_diagonal_part = self.irow.copy()
+        self.icol_diagonal_part = self.icol.copy()
 
-        self.photon_irow = self.irow
-        self.photon_icol = self.icol
+        self.photon_irow = self.irow.copy()
+        self.photon_icol = self.icol.copy()
 
-        self.detector1_irow = self.irow
-        self.detector1_icol = self.icol
+        self.detector1_irow = self.irow.copy()
+        self.detector1_icol = self.icol.copy()
 
-        self.detector2_irow = self.irow
-        self.detector2_icol = self.icol
+        self.detector2_irow = self.irow.copy()
+        self.detector2_icol = self.icol.copy()
 
-        self.mat_detector1_diagonal = self.mat_detector1
-        self.mat_detector2_diagonal = self.mat_detector2
+        self.mat_detector1_diagonal = self.mat_detector1.copy()
+        self.mat_detector2_diagonal = self.mat_detector2.copy()
 
     def compute_position_of_intra_detector_coupling(self):
         for i in range(self.state_num):
@@ -286,19 +288,19 @@ class full_system():
         return self.offdiagonal_parameter_number
 
     def read_offdiag_coupling_element(self,offdiagonal_coupling_list):
-        self.offdiagonal_parameter_list = offdiagonal_coupling_list
+        self.offdiagonal_parameter_list = offdiagonal_coupling_list.copy()
 
         begin_index = 0
         end_index = self.detector1.offdiag_coupling_num
-        off_diagonal_parameter_for_detector1 = offdiagonal_coupling_list [ begin_index: end_index]
+        off_diagonal_parameter_for_detector1 = offdiagonal_coupling_list [ begin_index: end_index].copy()
 
         begin_index = begin_index + self.detector1.offdiag_coupling_num
         end_index = end_index + self.detector2.offdiag_coupling_num
-        off_diagonal_parameter_for_detector2 = offdiagonal_coupling_list [ begin_index : end_index ]
+        off_diagonal_parameter_for_detector2 = offdiagonal_coupling_list [ begin_index : end_index ].copy()
 
         begin_index = begin_index + self.detector2.offdiag_coupling_num
         end_index = self.offdiagonal_parameter_number
-        self.offdiagonal_parameter_list_inter = offdiagonal_coupling_list[begin_index : end_index]
+        self.offdiagonal_parameter_list_inter = offdiagonal_coupling_list[begin_index : end_index].copy()
 
         self.detector1.read_offdiag_coupling_element(off_diagonal_parameter_for_detector1)
         self.detector2.read_offdiag_coupling_element(off_diagonal_parameter_for_detector2)
@@ -308,12 +310,12 @@ class full_system():
         self.detector1.Reverse_dmat()
         self.detector2.Reverse_dmat()
 
-        self.mat = self.mat_diagonal_part
-        self.irow = self.irow_diagonal_part
-        self.icol = self.icol_diagonal_part
+        self.mat = self.mat_diagonal_part.copy()
+        self.irow = self.irow_diagonal_part.copy()
+        self.icol = self.icol_diagonal_part.copy()
 
-        self.mat_detector1 = self.mat_detector1_diagonal
-        self.mat_detector2 = self.mat_detector2_diagonal
+        self.mat_detector1 = self.mat_detector1_diagonal.copy()
+        self.mat_detector2 = self.mat_detector2_diagonal.copy()
 
 
     # -------------------------- Read and output offdiagonal parameter number . Also reverse matrix  End---------------------
@@ -431,7 +433,7 @@ class full_system():
         # use self.mat_photon and self.photon_irow. self.photon_icol
         H_phi = self.mat_photon * self.wave_function[self.photon_icol]
 
-        H_phi_wave_function = np.zeros(self.state_num)
+        H_phi_wave_function = np.zeros(self.state_num,dtype=np.complex)
         H_phi_wave_function = wave_func_sum(H_phi_wave_function,H_phi, self.photon_irow)
 
         photon_energy = np.sum (np.real(np.conjugate(self.wave_function) * H_phi_wave_function) )
@@ -441,7 +443,7 @@ class full_system():
     def Evaluate_detector1_energy(self):
         H_phi = self.mat_detector1 * self.wave_function[self.detector1_icol]
 
-        H_phi_wave_function = np.zeros(self.state_num)
+        H_phi_wave_function = np.zeros(self.state_num,dtype=np.complex)
         H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, self.detector1_irow)
 
         detector1_energy = np.sum( np.real( np.conjugate(self.wave_function) * H_phi_wave_function ))
@@ -451,7 +453,7 @@ class full_system():
     def Evaluate_detector2_energy(self):
         H_phi = self.mat_detector2 * self.wave_function[self.detector2_icol]
 
-        H_phi_wave_function = np.zeros(self.state_num)
+        H_phi_wave_function = np.zeros(self.state_num,dtype=np.complex)
         H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, self.detector2_irow)
 
         detector2_energy = np.sum(np.real(np.conjugate(self.wave_function) * H_phi_wave_function))
@@ -464,7 +466,7 @@ class full_system():
 
         # define time step to do simulation
         Max_element = np.max( np.abs(self.mat) )
-        time_step = 0.1 / Max_element
+        time_step = 1 / Max_element
 
         # output step number and total_step_number
         output_step_number = int(output_time_step / time_step)
@@ -512,9 +514,12 @@ class full_system():
 
             # evaluate result. output photon_energy, detector1_energy, detector2_energy
             if(step % output_step_number == 0 ):
-                self.wave_function = np.complex(Real_part, Imag_part)
+                self.wave_function = np.array([np.complex(Real_part[i] , Imag_part[i]) for i in range(self.state_num)])
 
                 photon_energy = self.Evaluate_photon_energy()
+
+                if(step == 0 and abs(photon_energy - 1) > 0.1 ):
+                    print("Error")
 
                 detector1_energy = self.Evaluate_detector1_energy()
 

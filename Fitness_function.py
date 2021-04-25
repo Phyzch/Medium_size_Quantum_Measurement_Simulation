@@ -173,7 +173,7 @@ def fit_func1(First_peak_Time_duration, max_energy_change ,  Localization_durati
 
     return  Fitness_func_value
 
-def Evolve_full_system_and_return_energy_change(full_system_instance , off_diagonal_coupling):
+def Evolve_full_system_and_return_energy_change(full_system_instance ):
     # Evolve dynamics of full system
     photon_energy_list, d1_energy_list, d2_energy_list, Time_list = full_system_instance.Evolve_dynamics()
 
@@ -197,7 +197,7 @@ def fitness_function(bit_array , data ):
      # construct off diagonal part of Hamiltonian. and initialize wave function
      full_system_instance.construct_full_system_Hamiltonian_part2(off_diagonal_coupling)
 
-     photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance, off_diagonal_coupling)
+     photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance)
 
      First_peak_Time_duration, max_energy_change,Localization_duration_ratio = Analyze_peak_and_peak_duration(d1_energy_list_change, d2_energy_list_change, Time_list)
 

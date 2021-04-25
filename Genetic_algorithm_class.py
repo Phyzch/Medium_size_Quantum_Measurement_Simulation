@@ -224,13 +224,28 @@ class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
 
         self.current_generation = new_population
 
+    # customized create_individual function and crossover_function.
+    def create_individual_new(self):
+        # we need to specify the form of seed_data
+        _ , full_system_instance, bit_per_parameter, parameter_number = self.seed_data
+        return [random.randint(0, 1) for _ in range(parameter_number * bit_per_parameter)]
 
+    def crossover_function(self, parent_1, parent_2):
+        # we need to specify the form of seed_data
+        _ , full_system_instance, bit_per_parameter, parameter_number = self.seed_data
+        # notice because multiple bit represent one data, it makes no sense when do crossover, mess up structure within unit of parameter
+        crossover_index = random.randrange(1, parameter_number)
+        index = crossover_index * bit_per_parameter
+        child_1 = parent_1[:index] + parent_2[index:]
+        child_2 = parent_1[index:] + parent_2[:index]
 
-    def create_initial_population(self ):
+        return child_1, child_2
+
+    def create_initial_population(self):
         Initialization_size = int(self.population_size)
         initial_population = []
         for _ in range(Initialization_size):
-            genes = self.create_individual()
+            genes = self.create_individual_new()
             individual = pyeasyga.Chromosome(genes)
             initial_population.append(individual)
         self.current_generation = initial_population
@@ -256,20 +271,5 @@ class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
                     individual.fitness = self.Biglist_fitness[index]
 
 
-    # customized create_individual function and crossover_function.
-    def create_individual(self):
-        # we need to specify the form of seed_data
-        _ , full_system_instance, bit_per_parameter, parameter_number = self.seed_data
-        return [random.randint(0, 1) for _ in range(parameter_number * bit_per_parameter)]
 
-    def crossover_function(self, parent_1, parent_2):
-        # we need to specify the form of seed_data
-        _ , full_system_instance, bit_per_parameter, parameter_number = self.seed_data
-        # notice because multiple bit represent one data, it makes no sense when do crossover, mess up structure within unit of parameter
-        crossover_index = random.randrange(1, parameter_number)
-        index = crossover_index * bit_per_parameter
-        child_1 = parent_1[:index] + parent_2[index:]
-        child_2 = parent_1[index:] + parent_2[:index]
-
-        return child_1, child_2
 

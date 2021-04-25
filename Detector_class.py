@@ -38,6 +38,7 @@ class detector():
             print("Wrong. nmax without right dof")
 
         mode_number = np.zeros(self.dof)
+        mode_number[0] = -1
 
         initial_state = np.array(self.initial_state)
         initial_state_energy = np.sum(initial_state * self.frequency)
@@ -79,7 +80,8 @@ class detector():
             # now put this state into list which is ordered.
             position, exist = binary_search_mode_list(State_mode_list, mode_number)
             if (exist == False):
-                State_mode_list.insert(position, mode_number)
+                mode_number_copy = np.copy(mode_number)
+                State_mode_list.insert(position, mode_number_copy)
                 State_energy_list.insert(position, energy)
 
         self.State_energy_list = State_energy_list
@@ -93,10 +95,10 @@ class detector():
             self.dirow.append(i)
             self.dicol.append(i)
 
-        self.dmat_diagonal = self.dmat
+        self.dmat_diagonal = self.dmat.copy()
 
     def Reverse_dmat(self):
-        self.dmat = self.dmat_diagonal
+        self.dmat = self.dmat_diagonal.copy()
 
 
     def output_offdiag_coupling_num(self):
@@ -108,7 +110,7 @@ class detector():
         :param offdiag_coupling_element_list: This should read from Genetic algorithm.
         :return:
         '''
-        self.offdiag_coupling_element_list = offdiag_coupling_element_list
+        self.offdiag_coupling_element_list = offdiag_coupling_element_list.copy()
 
     def calculate_offdiag_coupling_num(self):
         '''

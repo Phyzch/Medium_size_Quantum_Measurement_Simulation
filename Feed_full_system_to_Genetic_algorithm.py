@@ -13,15 +13,15 @@ rank = comm.Get_rank()
 num_proc = comm.Get_size()
 import os
 
-Time_duration = 5000
-output_time_step = 10
+Time_duration = 500
+output_time_step = 1
 
 config.Time_duration = Time_duration
 config.output_time_step = output_time_step
 
 def Implement_genetic_algorithm(file_path):
     # specify input paramter
-    coupling_strength = 0.01
+    coupling_strength = 0.1
 
     photon_energy = 1
 
@@ -43,11 +43,11 @@ def Implement_genetic_algorithm(file_path):
 
     Initial_Wavefunction = [1/np.sqrt(2) , 1/np.sqrt(2)]
 
-    population_size_over_all_process = 100
+    population_size_over_all_process = 500
     # Each process only do their part of work. Thus their population is population_size / num_proc
     population_size = int(population_size_over_all_process / num_proc)
 
-    generations = 100
+    generations = 20
     crossover_prob = 0.7
     mutation_prob = 0.01
     Immigration_ratio = 0.2
@@ -142,7 +142,8 @@ def Implement_genetic_algorithm(file_path):
         fitness_for_all = fitness_for_all[Sort_index]
 
         # plot best parameter simulation result
-        photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance, best_param)
+        full_system_instance.construct_full_system_Hamiltonian_part2(best_param)
+        photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance)
 
         First_peak_Time_duration, max_energy_change, Localization_duration_ratio = Analyze_peak_and_peak_duration(
             d1_energy_list_change, d2_energy_list_change, Time_list)
@@ -152,6 +153,8 @@ def Implement_genetic_algorithm(file_path):
         ax1.plot(Time_list, d1_energy_list_change , label='left photon localization')
         ax1.plot(Time_list , d2_energy_list_change , label='right photon localization')
         ax1.plot(Time_list , photon_energy_list , label='photon energy')
+
+        ax1.legend(loc = 'best')
 
         fig_name = "best_simulation_result.png"
         fig_name = os.path.join(file_path, fig_name)
@@ -222,6 +225,8 @@ def Implement_genetic_algorithm(file_path):
             for energy in photon_energy_list:
                 f1.write(str(round(energy, 4)) + "  ")
             f1.write('\n')
+
+
 
 
 
