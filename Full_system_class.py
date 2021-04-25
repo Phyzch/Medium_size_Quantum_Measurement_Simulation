@@ -1,20 +1,42 @@
 import numpy as np
+import config
 from Detector_class import detector
+from Constructing_state_module import binary_search_mode_list
 
+import numba
+from numba import jit
 
 # To use this class:
 # fixme: First run:  construct_full_system_Hamiltonian_part1
 # fixme: Then run: output_offdiagonal_parameter_number(self) to tell Genetic algorithm number of off-diagonal parameter we need to feed
-# fixme: Then run construct_full_system_Hamiltonian_part2(self , offdiagonal_coupling_list)
+# fixme: Then run construct_full_system_Hamiltonian_part2(self , offdiagonal_coupling_list) [This is called in Genetic algorithm fitness function]
+
+@jit(nopython = True)
+def wave_func_sum(original_value, part_add, index):
+    '''
+    H_real[ irow[index]] = H_real[irow[index]] + part_add[index]
+    :param original_value:
+    :param part_add:
+    :param index:
+    :return:
+    '''
+    len = np.shape(index)[0]
+    for i in range(len):
+        original_value[index[i]] = original_value[index[i]] + part_add[i]
+
+    return original_value
+
 
 class full_system():
 
-    def __init__(self ,Detector_1_parameter, Detector_2_parameter, photon_energy):
+    def __init__(self ,Detector_1_parameter, Detector_2_parameter, photon_energy, Initial_Wave_Function):
         dof1, frequency1, nmax1, initial_state1, energy_window1 = Detector_1_parameter
         dof2, frequency2, nmax2, initial_state2, energy_window2 = Detector_2_parameter
 
         self.detector1 = detector(dof1,frequency1,nmax1,initial_state1,energy_window1)
         self.detector2 = detector(dof2, frequency2, nmax2, initial_state2, energy_window2)
+        self.Initial_Wave_Function = Initial_Wave_Function
+        self.initial_energy = 0
 
         self.sstate = []
         self.dstate1 = []
@@ -52,6 +74,27 @@ class full_system():
         self.inter_coupling_irow = []
         self.inter_coupling_icol = []
 
+        self.system_wave_func = np.zeros(self.system_state_num)
+        self.system_wave_func[1] = 1/np.sqrt(2)
+        self.system_wave_func[2] = 1/np.sqrt(2)
+
+        self.wave_function = []
+
+        self.mat_photon = []
+        self.photon_irow = []
+        self.photon_icol = []
+
+        self.mat_detector1 = []
+        self.detector1_irow = []
+        self.detector1_icol = []
+
+        self.mat_detector2 = []
+        self.detector2_irow = []
+        self.detector2_icol = []
+
+        self.mat_detector1_diagonal = []
+        self.mat_detector2_diagonal = []
+
 # ----------------   first part of construcing Hamiltonian. This only have to be called once. --------------------------------
 
     def construct_full_system_Hamiltonian_part1(self):
@@ -85,10 +128,26 @@ class full_system():
                     self.icol.append(self.state_num)
                     self.state_num = self.state_num + 1
 
+                    self.mat_photon.append( self.system_energy[i] )
+                    self.mat_detector1.append(self.detector1.State_energy_list[j])
+                    self.mat_detector2.append(self.detector2.State_energy_list[k])
+
+
         self.mat_diagonal_part = self.mat
         self.irow_diagonal_part = self.irow
         self.icol_diagonal_part = self.icol
 
+        self.photon_irow = self.irow
+        self.photon_icol = self.icol
+
+        self.detector1_irow = self.irow
+        self.detector1_icol = self.icol
+
+        self.detector2_irow = self.irow
+        self.detector2_icol = self.icol
+
+        self.mat_detector1_diagonal = self.mat_detector1
+        self.mat_detector2_diagonal = self.mat_detector2
 
     def compute_position_of_intra_detector_coupling(self):
         for i in range(self.state_num):
@@ -111,6 +170,13 @@ class full_system():
                             self.detector2_coupling_icol.append(j)
                             self.detector2_coupling_dmat_index.append(k)
 
+                            self.detector2_irow.append(i)
+                            self.detector2_icol.append(j)
+
+                            # also record lower triangular part
+                            self.detector2_icol.append(i)
+                            self.detector2_irow.append(j)
+
                             break
 
                 # coupling in detector 1
@@ -120,6 +186,14 @@ class full_system():
                             self.detector1_coupling_irow.append(i)
                             self.detector1_coupling_icol.append(j)
                             self.detector1_coupling_dmat_index.append(k)
+
+                            self.detector1_irow.append(i)
+                            self.detector1_icol.append(j)
+
+                            # also record lower triangular part
+                            self.detector1_icol.append(i)
+                            self.detector1_irow.append(j)
+
 
                             break
 
@@ -234,6 +308,10 @@ class full_system():
         self.irow = self.irow_diagonal_part
         self.icol = self.icol_diagonal_part
 
+        self.mat_detector1 = self.mat_detector1_diagonal
+        self.mat_detector2 = self.mat_detector2_diagonal
+
+
     # -------------------------- Read and output offdiagonal parameter number . Also reverse matrix  End---------------------
 
     def construct_full_system_offdiag_coupling(self):
@@ -266,6 +344,13 @@ class full_system():
             self.irow.append(self.detector1_coupling_icol[i])
             self.icol.append(self.detector1_coupling_irow[i])
 
+
+            # We construct Hamiltonian for detector1
+            self.mat_detector1.append(self.detector1.dmat[ k ])
+            # also lower triangular part
+            self.mat_detector1.append(self.detector1.dmat[ k ])
+
+
         # coupling in detector2
         intra_detector2_coupling_num = len(self.detector2_coupling_irow)
         for i in range(intra_detector2_coupling_num):
@@ -278,6 +363,11 @@ class full_system():
             self.mat.append(self.detector2.dmat[ k ])
             self.irow.append(self.detector2_coupling_icol[i])
             self.icol.append(self.detector2_coupling_irow[i])
+
+            # We construct Hamiltonian for detector2
+            self.mat_detector2.append(self.detector2.dmat[ k ])
+            # also lower triangular part
+            self.mat_detector2.append(self.detector2.dmat[ k ])
 
 
 
@@ -301,4 +391,143 @@ class full_system():
         # full system construct Hamiltonian using detector's Hamiltonian.
         self.construct_full_system_offdiag_coupling()
 
+        # initialize wave function.
+        self.initialize_wave_function()
 
+        # shift Hamiltonian
+        self.Shift_Hamiltonian()
+
+
+    def initialize_wave_function(self):
+        self.detector1.initialize_wave_function()
+        self.detector2.initialize_wave_function()
+
+        position1, exist1 = binary_search_mode_list(self.detector1.State_mode_list, self.detector1.initial_state)
+        position2, exist2 = binary_search_mode_list(self.detector2.State_mode_list, self.detector2.initial_state)
+
+        self.wave_function = np.zeros(self.state_num, dtype = np.complex)
+
+        self.initial_energy = 0
+        for i in range(self.state_num):
+            if self.sstate[i] == 1  :
+                if self.dstate1[i] == position1 and self.dstate2[i] == position2 :
+                    self.wave_function[i] = self.Initial_Wave_Function[0]
+                    self.initial_energy = self.initial_energy + self.mat[i] * np.power(np.abs(self.wave_function[i]) , 2)
+
+            if self.sstate[i] == 2 :
+                if self.dstate1[i] == position1 and self.dstate2[i] == position2 :
+                    self.wave_function[i] = self. Initial_Wave_Function[1]
+                    self.initial_energy = self.initial_energy + self.mat[i] * np.power(np.abs(self.wave_function[i]), 2)
+
+    def Shift_Hamiltonian(self):
+        for i in range(self.state_num):
+            self.mat[i] = self.mat[i] - self.initial_energy
+
+    def Evaluate_photon_energy(self):
+        # use self.mat_photon and self.photon_irow. self.photon_icol
+        H_phi = self.mat_photon * self.wave_function[self.photon_icol]
+
+        H_phi_wave_function = np.zeros(self.state_num)
+        H_phi_wave_function = wave_func_sum(H_phi_wave_function,H_phi, self.photon_irow)
+
+        photon_energy = np.sum (np.real(np.conjugate(self.wave_function) * H_phi_wave_function) )
+
+        return photon_energy
+
+    def Evaluate_detector1_energy(self):
+        H_phi = self.mat_detector1 * self.wave_function[self.detector1_icol]
+
+        H_phi_wave_function = np.zeros(self.state_num)
+        H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, self.detector1_irow)
+
+        detector1_energy = np.sum( np.real( np.conjugate(self.wave_function) * H_phi_wave_function ))
+
+        return detector1_energy
+
+    def Evaluate_detector2_energy(self):
+        H_phi = self.mat_detector2 * self.wave_function[self.detector2_icol]
+
+        H_phi_wave_function = np.zeros(self.state_num)
+        H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, self.detector2_irow)
+
+        detector2_energy = np.sum(np.real(np.conjugate(self.wave_function) * H_phi_wave_function))
+
+        return detector2_energy
+
+    def Evolve_dynamics(self):
+        Final_time = config.Time_duration
+        output_time_step = config.output_time_step
+
+        # define time step to do simulation
+        Max_element = np.max( np.abs(self.mat) )
+        time_step = 0.1 / Max_element
+
+        # output step number and total_step_number
+        output_step_number = int(output_time_step / time_step)
+        total_step_number = int(Final_time / time_step)
+
+        Real_part = np.real(self.wave_function)
+        Imag_part = np.imag(self.wave_function)
+        # SUR algorithm
+        # Vectorize
+
+        self.mat = np.array(self.mat)
+        self.irow = np.array(self.irow)
+        self.icol = np.array(self.icol)
+
+        self.mat_photon = np.array(self.mat_photon)
+        self.photon_irow = np.array(self.photon_irow)
+        self.photon_icol = np.array(self.photon_icol)
+
+        self.mat_detector1 = np.array(self.mat_detector1)
+        self.detector1_irow = np.array(self.detector1_irow)
+        self.detector1_icol = np.array(self.detector1_icol)
+        self.detector2_irow = np.array(self.detector2_irow)
+        self.detector2_icol = np.array(self.detector2_icol)
+
+        d1_energy_list = []
+        d2_energy_list = []
+        photon_energy_list = []
+
+        t = 0
+        Time_list = []
+
+        for step in range(total_step_number):
+
+            # SUR algorithm
+
+            # real_part = real_part + H * dt * imag_part
+            # imag_part = imag_part - H * dt * real_part
+            real_part_change = self.mat * Imag_part[self.icol] * time_step
+            # use numba to speed up
+            Real_part = wave_func_sum(Real_part, real_part_change, self.irow)
+
+            imag_part_change = -self.mat * Real_part[self.icol] * time_step
+            # use numba to speed up
+            Imag_part = wave_func_sum(Imag_part, imag_part_change, self.irow)
+
+            # evaluate result. output photon_energy, detector1_energy, detector2_energy
+            if(step % output_step_number == 0 ):
+                self.wave_function = np.complex(Real_part, Imag_part)
+
+                photon_energy = self.Evaluate_photon_energy()
+
+                detector1_energy = self.Evaluate_detector1_energy()
+
+                detector2_energy = self.Evaluate_detector2_energy()
+
+                d1_energy_list.append(detector1_energy)
+                d2_energy_list.append(detector2_energy)
+                photon_energy_list.append(photon_energy)
+
+                Time_list.append(t)
+
+            t = t + time_step
+
+
+        d1_energy_list = np.array(d1_energy_list)
+        d2_energy_list = np.array(d2_energy_list)
+        photon_energy_list = np.array(photon_energy_list)
+        Time_list = np.array(Time_list)
+
+        return  photon_energy_list, d1_energy_list, d2_energy_list , Time_list

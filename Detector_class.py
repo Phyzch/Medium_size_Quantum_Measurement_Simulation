@@ -172,6 +172,6 @@ class detector():
         if(exist == False):
             raise NameError("Wrong . Initial state not in state space")
 
-        self.wave_function = np.zeros(self.state_num)
+        self.wave_function = np.zeros(self.state_num , dtype = np.complex)
         self.wave_function[position] = 1
 
