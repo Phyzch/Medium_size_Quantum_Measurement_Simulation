@@ -43,6 +43,10 @@ class full_system():
         self.dstate2 = []
 
         self.system_state_num = 3
+
+        # energy of photon
+        self.photon_energy = photon_energy
+
         self.system_energy = [0, photon_energy, photon_energy]
 
         self.state_num = 0
