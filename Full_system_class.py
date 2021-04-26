@@ -309,8 +309,6 @@ class full_system():
 
                 # coupling between detector1 and detector2
                 if(ss ==0 and di1!= dj1 and di2 != dj2):
-                    if(di1 == 1 and di2 == 3 and dj1 == 2 and dj2 == 2):
-                        print("Found.")
                     for k in range(1,self.detector2.dof):
                         deldv2 = self.detector2.State_mode_list[di2][k] - self.detector2.State_mode_list[dj2][k]
                         if( abs(deldv2) == 1 ):
@@ -349,7 +347,7 @@ class full_system():
 
                                     coupling_num_between_detector = coupling_num_between_detector + 1
 
-        x = 0
+
 #  --------------------------------------- first part of construcing Hamiltonian. This only have to be called once. End ---------------------
 
  # -------------------------- Read and output offdiagonal parameter number . Also reverse matrix begin ---------------------
@@ -607,6 +605,7 @@ class full_system():
             Coupling_mode_list.append(coupling_mode)
 
         Len = len(Coupling_mode_list)
+        print("Coupling number:  "  +str(Len))
         print("Coupling for state in full system: ")
         for i in range(Len):
             print(Coupling_mode_list[i])

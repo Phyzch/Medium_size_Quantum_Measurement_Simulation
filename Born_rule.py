@@ -14,7 +14,7 @@ rank = comm.Get_rank()
 num_proc = comm.Get_size()
 
 def Analyze_Born_rule(file_path):
-    iteration_number = 1000
+    iteration_number = 100
 
     coupling_strength = 0.1
 
@@ -22,10 +22,10 @@ def Analyze_Born_rule(file_path):
 
     dof = 3
 
-    frequency1 = [1, 0.5,0.25]
-    frequency2 = [1, 0.5,0.25]
+    frequency1 = [1, 0.5, 0.25]
+    frequency2 = [1, 0.5, 0.25]
 
-    nmax1 = [1, 2, 4]
+    nmax1 = [1, 2, 4 ]
     nmax2 = [1, 2, 4]
 
     initial_state1 = [0, 0, 0]
