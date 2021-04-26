@@ -15,7 +15,7 @@ num_proc = comm.Get_size()
 
 
 def Analyze_Born_rule(file_path):
-    iteration_number = 1000
+    iteration_number = 100
 
     coupling_strength = 0.1
 
@@ -23,8 +23,11 @@ def Analyze_Born_rule(file_path):
 
     dof = 3
 
-    frequency1 = [1, 0.5, 0.25]
-    frequency2 = [1, 0.5, 0.25]
+    frequency1 = [1, 0.5 , 0.25 ]
+    frequency2 = [1, 0.5 , 0.25]
+
+    frequency1 = np.array(frequency1)
+    frequency2 = np.array(frequency2)
 
     nmax1 = [1, 2, 4 ]
     nmax2 = [1, 2, 4]
@@ -40,7 +43,7 @@ def Analyze_Born_rule(file_path):
     Detector_1_parameter = dof, frequency1, nmax1, initial_state1, energy_window1
     Detector_2_parameter = dof, frequency2, nmax2, initial_state2, energy_window2
 
-    Initial_Wavefunction = [np.sqrt(2) / np.sqrt(3), np.sqrt(1) / np.sqrt(3)]
+    Initial_Wavefunction = [np.sqrt(1) / np.sqrt(4), np.sqrt(3) / np.sqrt(4)]
 
     # Other part of code for full system is called within fitness function in each cycle of genetic algorithm.
     full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window,
@@ -48,16 +51,16 @@ def Analyze_Born_rule(file_path):
     full_system_instance.construct_full_system_Hamiltonian_part1()
 
     # print information about structure of system
-    if(rank == 0):
-        full_system_instance.print_state_mode()
-        full_system_instance.detector1.output_detector_state_coupling()
-        full_system_instance.output_off_diagonal_coupling_mode_info()
-
-        print( "parameter number for detector1: "  + str(full_system_instance.detector1.offdiag_coupling_num) )
-        print( "parameter number for detector2: " + str(full_system_instance.detector2.offdiag_coupling_num) )
-        print( "paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiagonal_parameter_number -
-                                                                                    full_system_instance.detector1.offdiag_coupling_num -
-                                                                                    full_system_instance.detector2.offdiag_coupling_num))
+    # if(rank == 0):
+    #     full_system_instance.print_state_mode()
+    #     full_system_instance.detector1.output_detector_state_coupling()
+    #     full_system_instance.output_off_diagonal_coupling_mode_info()
+    #
+    #     print( "parameter number for detector1: "  + str(full_system_instance.detector1.offdiag_coupling_num) )
+    #     print( "parameter number for detector2: " + str(full_system_instance.detector2.offdiag_coupling_num) )
+    #     print( "paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiagonal_parameter_number -
+    #                                                                                 full_system_instance.detector1.offdiag_coupling_num -
+    #                                                                                 full_system_instance.detector2.offdiag_coupling_num))
 
     parameter_number = full_system_instance.output_offdiagonal_parameter_number()
 
@@ -152,6 +155,8 @@ def Analyze_Localization_prob(iteration_number_per_core,Max_energy_change_list ,
         Left_side_prob = Left_side_time / List_len
         Right_side_prob = Right_side_time / List_len
         print("wave function: " + str(psi0))
+        Born_prob = np.power(psi0 , 2)
+        print("Born rule prob (theoretical):  " + str(Born_prob))
         print("Left side prob:  " + str(Left_side_prob))
         print("Right side prob: " + str(Right_side_prob))
         print('total sample number ' + str(List_len))

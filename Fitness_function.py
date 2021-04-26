@@ -83,6 +83,13 @@ def Analyze_peak_and_peak_duration(e2l_change, e2r_change , Time ) :
         elif (e2l_change_peak_index[0] > e2r_change_peak_index[0]):
             Localization_bool = 2
 
+    # ------------------  Another criteria -----------------------------
+    if(max_energy_change == max_e2l_change ):
+        Localization_bool = 1
+    else:
+        Localization_bool = 2
+    # -------------------------------------------------
+
     time_step = Time[1] - Time[0]
     Localization_duration_left = len(e2l_change_peak_index) * time_step
     Localization_duration_right = len(e2r_change_peak_index) * time_step

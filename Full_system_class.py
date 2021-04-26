@@ -518,7 +518,7 @@ class full_system():
 
         # define time step to do simulation
         Max_element = np.max( np.abs(self.mat) )
-        time_step = 0.1 / (5 * Max_element)
+        time_step = 0.1 / (Max_element)
 
         # output step number and total_step_number
         output_step_number = max( int(output_time_step / time_step) , 1)
@@ -556,9 +556,9 @@ class full_system():
             if(step % output_step_number == 0 ):
                 self.wave_function = np.array([np.complex(Real_part[i] , Imag_part[i]) for i in range(self.state_num)])
                 # wave_function_list.append(self.wave_function)
-                photon_energy = self.Evaluate_photon_energy()
+                photon_energy1 = self.Evaluate_photon_energy()
 
-                if(step == 0 and abs(photon_energy - 1) > 0.1 ):
+                if(step == 0 and abs(photon_energy1 - self.photon_energy) > 0.1 ):
                     print("Error")
 
                 detector1_energy = self.Evaluate_detector1_energy()
@@ -567,7 +567,7 @@ class full_system():
 
                 d1_energy_list.append(detector1_energy)
                 d2_energy_list.append(detector2_energy)
-                photon_energy_list.append(photon_energy)
+                photon_energy_list.append(photon_energy1)
 
                 Time_list.append(t)
 
@@ -591,6 +591,16 @@ class full_system():
         d2_energy_list = np.array(d2_energy_list)
         photon_energy_list = np.array(photon_energy_list)
         Time_list = np.array(Time_list)
+
+        Total_energy = d1_energy_list  + d2_energy_list + photon_energy_list
+        total_energy_len = len(Total_energy)
+        # for i in range(total_energy_len):
+        #     if( abs(Total_energy[i] - 1) > 0.1 ):
+        #         print("simulation time step:  " + str(time_step))
+        #         print('time: ' + str(Time_list[i]))
+        #         print('photon energy :  ' + str(photon_energy_list[i]) + ' detector1 energy:  ' + str(d1_energy_list[i]) +"   detector2 energy:  " + str(d2_energy_list[i]) )
+        #         raise NameError("SUR algorithm do not converge energy. Check code for error")
+
 
         return  photon_energy_list, d1_energy_list, d2_energy_list , Time_list
 
