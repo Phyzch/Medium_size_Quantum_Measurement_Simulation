@@ -20,8 +20,8 @@ def wave_func_sum(original_value, part_add, index):
     :param index:
     :return:
     '''
-    len = np.shape(index)[0]
-    for i in range(len):
+    Len = np.shape(index)[0]
+    for i in range(Len):
         index_i = index[i]
         original_value[index_i] = original_value[index_i] + part_add[i]
 
@@ -455,7 +455,7 @@ class full_system():
         self.initialize_wave_function()
 
         # shift Hamiltonian
-        self.Shift_Hamiltonian()
+        # self.Shift_Hamiltonian()
 
 
     def initialize_wave_function(self):
@@ -479,6 +479,7 @@ class full_system():
     def Shift_Hamiltonian(self):
         for i in range(self.state_num):
             self.mat[i] = self.mat[i] - self.initial_energy
+
 
     def Evaluate_photon_energy(self):
         # use self.mat_photon and self.photon_irow. self.photon_icol
@@ -517,7 +518,7 @@ class full_system():
 
         # define time step to do simulation
         Max_element = np.max( np.abs(self.mat) )
-        time_step = 0.1 / Max_element
+        time_step = 0.1 / (5 * Max_element)
 
         # output step number and total_step_number
         output_step_number = max( int(output_time_step / time_step) , 1)
@@ -549,24 +550,12 @@ class full_system():
         t = 0
         Time_list = []
 
+        wave_function_list = []
         for step in range(total_step_number):
-
-            # SUR algorithm
-
-            # real_part = real_part + H * dt * imag_part
-            # imag_part = imag_part - H * dt * real_part
-            real_part_change = self.mat * Imag_part[self.icol] * time_step
-            # use numba to speed up
-            Real_part = wave_func_sum(Real_part, real_part_change, self.irow)
-
-            imag_part_change = -self.mat * Real_part[self.icol] * time_step
-            # use numba to speed up
-            Imag_part = wave_func_sum(Imag_part, imag_part_change, self.irow)
-
             # evaluate result. output photon_energy, detector1_energy, detector2_energy
             if(step % output_step_number == 0 ):
                 self.wave_function = np.array([np.complex(Real_part[i] , Imag_part[i]) for i in range(self.state_num)])
-
+                # wave_function_list.append(self.wave_function)
                 photon_energy = self.Evaluate_photon_energy()
 
                 if(step == 0 and abs(photon_energy - 1) > 0.1 ):
@@ -581,6 +570,19 @@ class full_system():
                 photon_energy_list.append(photon_energy)
 
                 Time_list.append(t)
+
+            # SUR algorithm
+
+            # real_part = real_part + H * dt * imag_part
+            # imag_part = imag_part - H * dt * real_part
+            real_part_change = self.mat * Imag_part[self.icol] * time_step
+            # use numba to speed up
+            Real_part = wave_func_sum(Real_part, real_part_change, self.irow)
+
+            imag_part_change = -self.mat * Real_part[self.icol] * time_step
+            # use numba to speed up
+            Imag_part = wave_func_sum(Imag_part, imag_part_change, self.irow)
+
 
             t = t + time_step
 

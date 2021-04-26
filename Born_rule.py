@@ -13,8 +13,9 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 num_proc = comm.Get_size()
 
+
 def Analyze_Born_rule(file_path):
-    iteration_number = 100
+    iteration_number = 1000
 
     coupling_strength = 0.1
 
