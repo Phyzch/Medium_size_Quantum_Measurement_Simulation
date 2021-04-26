@@ -68,8 +68,6 @@ class full_system():
         self.icol = []
 
         self.mat_diagonal_part = []
-        self.irow_diagonal_part = []
-        self.icol_diagonal_part = []
 
         # index for coupling in detector1 and detector2 in full system matrix.
         self.detector1_coupling_irow = []
@@ -128,6 +126,29 @@ class full_system():
         self.compute_position_of_intra_detector_coupling()
 
 
+        # fixme: construct irow and icol. (Note for irow,icol. We add offdiagonal part between detector in compute_full_system_offdiagonal_paramter_number())
+        # fixme: Then we add offdiagonal index for same detector below. Same order apply to part that reconstruct offdiagonal part of mat.
+        intra_detector1_coupling_num = len(self.detector1_coupling_irow)
+        for i in range(intra_detector1_coupling_num):
+            self.irow.append(self.detector1_coupling_irow[i])
+            self.icol.append(self.detector1_coupling_icol[i])
+
+            #lower diangular part
+            self.irow.append(self.detector1_coupling_icol[i])
+            self.icol.append(self.detector1_coupling_irow[i])
+
+        intra_detector2_coupling_num = len(self.detector2_coupling_irow)
+        for i in range(intra_detector2_coupling_num):
+            self.irow.append(self.detector2_coupling_irow[i])
+            self.icol.append(self.detector2_coupling_icol[i])
+
+            # lower diagonal part
+            self.irow.append(self.detector2_coupling_icol[i])
+            self.icol.append(self.detector2_coupling_irow[i])
+
+        self.matnum = len(self.irow)
+
+
     def construct_full_system_diagonal_Hamiltonian(self):
         self.state_num = 0
         for i in range(self.system_state_num):
@@ -158,8 +179,6 @@ class full_system():
 
 
         self.mat_diagonal_part = self.mat.copy()
-        self.irow_diagonal_part = self.irow.copy()
-        self.icol_diagonal_part = self.icol.copy()
 
         self.photon_irow = self.irow.copy()
         self.photon_icol = self.icol.copy()
@@ -252,6 +271,12 @@ class full_system():
 
                         if(Same):
                             self.offdiagonal_parameter_number = self.offdiagonal_parameter_number + 1
+                            self.irow.append(i)
+                            self.icol.append(j)
+                            # lower triangular part.
+                            self.irow.append(j)
+                            self.icol.append(i)
+
                             self.inter_coupling_irow.append(i)
                             self.inter_coupling_icol.append(j)
 
@@ -268,6 +293,12 @@ class full_system():
                             self.offdiagonal_parameter_number = self.offdiagonal_parameter_number + 1
                             self.inter_coupling_irow.append(i)
                             self.inter_coupling_icol.append(j)
+
+                            self.irow.append(i)
+                            self.icol.append(j)
+                            # lower triangular part.
+                            self.irow.append(j)
+                            self.icol.append(i)
 
                 # coupling between detector1 and detector2
                 if(ss ==0 and di1!= dj1 and di2 != dj2):
@@ -301,6 +332,12 @@ class full_system():
                                     self.inter_coupling_irow.append(i)
                                     self.inter_coupling_icol.append(j)
 
+                                    self.irow.append(i)
+                                    self.icol.append(j)
+                                    # lower triangular part.
+                                    self.irow.append(j)
+                                    self.icol.append(i)
+
 #  --------------------------------------- first part of construcing Hamiltonian. This only have to be called once. End ---------------------
 
  # -------------------------- Read and output offdiagonal parameter number . Also reverse matrix begin ---------------------
@@ -326,14 +363,12 @@ class full_system():
         self.detector1.read_offdiag_coupling_element(off_diagonal_parameter_for_detector1)
         self.detector2.read_offdiag_coupling_element(off_diagonal_parameter_for_detector2)
 
-    def Reverse_mat_irow_icol(self):
+    def Reverse_mat(self):
         # For each generation, we only have to update off-diagonal part . We do not have to compute off-diagonal coupling number and reconstruct diagonal part
         self.detector1.Reverse_dmat()
         self.detector2.Reverse_dmat()
 
         self.mat = self.mat_diagonal_part.copy()
-        self.irow = self.irow_diagonal_part.copy()
-        self.icol = self.icol_diagonal_part.copy()
 
         self.mat_detector1 = self.mat_detector1_diagonal.copy()
         self.mat_detector2 = self.mat_detector2_diagonal.copy()
@@ -350,12 +385,8 @@ class full_system():
         # coupling between detector and system. and detector between detector
         for i in range(inter_detector_coupling_num):
             self.mat.append(self.offdiagonal_parameter_list_inter[i])
-            self.irow.append(self.inter_coupling_irow[i])
-            self.icol.append(self.inter_coupling_icol[i])
 
             self.mat.append(self.offdiagonal_parameter_list_inter[i])
-            self.irow.append(self.inter_coupling_icol[i])
-            self.icol.append(self.inter_coupling_irow[i])
 
         # coupling in detector 1
         intra_detector1_coupling_num = len(self.detector1_coupling_irow)
@@ -363,13 +394,9 @@ class full_system():
             k = self.detector1_coupling_dmat_index[i]
 
             self.mat.append(self.detector1.dmat[ k ])
-            self.irow.append(self.detector1_coupling_irow[i])
-            self.icol.append(self.detector1_coupling_icol[i])
 
             # we also record lower trangular part
             self.mat.append(self.detector1.dmat[ k ])
-            self.irow.append(self.detector1_coupling_icol[i])
-            self.icol.append(self.detector1_coupling_irow[i])
 
 
             # We construct Hamiltonian for detector1
@@ -384,12 +411,8 @@ class full_system():
             k = self.detector2_coupling_dmat_index[i]
 
             self.mat.append(self.detector2.dmat[ k ])
-            self.irow.append(self.detector2_coupling_irow[i])
-            self.icol.append(self.detector2_coupling_icol[i])
 
             self.mat.append(self.detector2.dmat[ k ])
-            self.irow.append(self.detector2_coupling_icol[i])
-            self.icol.append(self.detector2_coupling_irow[i])
 
             # We construct Hamiltonian for detector2
             self.mat_detector2.append(self.detector2.dmat[ k ])
@@ -405,7 +428,7 @@ class full_system():
         :return:
         '''
         # First reverse matrix to contain only diagonal part.
-        self.Reverse_mat_irow_icol()
+        self.Reverse_mat()
 
         # Then read offdiagonal coupling parameter
         self.read_offdiag_coupling_element(offdiagonal_coupling_list)
@@ -558,3 +581,20 @@ class full_system():
         Time_list = np.array(Time_list)
 
         return  photon_energy_list, d1_energy_list, d2_energy_list , Time_list
+
+    def output_off_diagonal_coupling_mode_info(self):
+        Coupling_mode_list = []
+        for i in range(self.state_num, self.matnum):
+            irow_index = self.irow[i]
+            icol_index = self.icol[i]
+
+            coupling_mode = []
+            coupling_mode.append(self.state_mode_list[irow_index])
+            coupling_mode.append(self.state_mode_list[icol_index])
+
+            Coupling_mode_list.append(coupling_mode)
+
+        Len = len(Coupling_mode_list)
+        print("Coupling for state in full system: ")
+        for i in range(Len):
+            print(Coupling_mode_list[i])
