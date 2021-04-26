@@ -1,11 +1,10 @@
 import numpy as np
-import config
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 num_proc = comm.Get_size()
-
+import Shared_data
 from Full_system_class import full_system
 
 def Convert_bit_to_parameter( bit_array , maximum_coupling_strength, parameter_number, bit_per_parameter ):
@@ -100,10 +99,8 @@ def Analyze_peak_and_peak_duration(e2l_change, e2r_change , Time ) :
     # value of first peak:
     if len(e2l_change_peak_index) > 1:
         for i in range(1, len(e2l_change_peak_index)):
-            if (e2l_change_peak_index[i] - e2l_change_peak_index[i - 1] == 1):
-                e2l_change_first_peak_index.append(e2l_change_peak_index[i - 1])
-            else:
-                e2l_change_first_peak_index.append(e2l_change_peak_index[i - 1])
+            e2l_change_first_peak_index.append(e2l_change_peak_index[i - 1])
+            if (e2l_change_peak_index[i] - e2l_change_peak_index[i - 1] != 1):
                 break
     else:
         if (len(e2l_change_peak_index) == 1):
@@ -111,10 +108,8 @@ def Analyze_peak_and_peak_duration(e2l_change, e2r_change , Time ) :
 
     if len(e2r_change_peak_index) > 1:
         for i in range(1, len(e2r_change_peak_index)):
-            if (e2r_change_peak_index[i] - e2r_change_peak_index[i - 1] == 1):
-                e2r_change_first_peak_index.append(e2r_change_peak_index[i - 1])
-            else:
-                e2r_change_first_peak_index.append(e2r_change_peak_index[i - 1])
+            e2r_change_first_peak_index.append(e2r_change_peak_index[i - 1])
+            if (e2r_change_peak_index[i] - e2r_change_peak_index[i - 1] != 1):
                 break
     else:
         if (len(e2r_change_peak_index) == 1):
@@ -164,14 +159,21 @@ def fit_func1(First_peak_Time_duration, max_energy_change ,  Localization_durati
 
     '''
     # ratio of first peak duration.
-    Time_duration = config.Time_duration
+    Time_duration = Shared_data.Time_duration
+
     First_peak_Time_duration_ratio = First_peak_Time_duration / Time_duration * parameter_geometric_mean_ratio
 
     # Fitness_func_value = 0.5 * pow(max_energy_change, 2 ) + 10 * pow(Localization_duration_ratio , 2) + 60 * First_peak_Time_duration_ratio
 
-    Fitness_func_value = 5 * pow(max_energy_change, 2 ) + 10 * pow(Localization_duration_ratio , 2) + 60 * First_peak_Time_duration_ratio
+    Max_energy_fitness_contribution = 10 * pow(max_energy_change, 2 )
 
-    return  Fitness_func_value
+    Localization_duration_ratio_contribution = 20 * pow(Localization_duration_ratio , 2)
+
+    First_peak_duration_contribution = First_peak_Time_duration_ratio * 20
+
+    Fitness_func_value = Max_energy_fitness_contribution + Localization_duration_ratio_contribution + First_peak_duration_contribution
+
+    return  Fitness_func_value , Max_energy_fitness_contribution, Localization_duration_ratio_contribution , First_peak_duration_contribution
 
 def Evolve_full_system_and_return_energy_change(full_system_instance ):
     # Evolve dynamics of full system
@@ -209,7 +211,7 @@ def fitness_function(bit_array , data ):
 
      geometric_mean_ratio = geometric_mean / coupling_strength
 
-     fitness_func_value = fit_func1(First_peak_Time_duration, max_energy_change, Localization_duration_ratio,
+     fitness_func_value , Max_energy_fitness_contribution, Localization_duration_ratio_contribution , First_peak_duration_contribution  = fit_func1(First_peak_Time_duration, max_energy_change, Localization_duration_ratio,
                                    geometric_mean_ratio)
 
      return fitness_func_value

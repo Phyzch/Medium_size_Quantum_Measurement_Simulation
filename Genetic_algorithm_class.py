@@ -1,18 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from pyeasyga import pyeasyga
 import random
-import matplotlib.gridspec as gridspec
 import copy
-from scipy.sparse.linalg import expm
-import scipy
-from scipy.stats.mstats import gmean
 from timeit import default_timer as timer
-
-import re
-import os
-import config
-import time
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD

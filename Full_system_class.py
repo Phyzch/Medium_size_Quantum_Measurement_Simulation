@@ -1,5 +1,5 @@
 import numpy as np
-import config
+import Shared_data
 from Detector_class import detector
 from Constructing_state_module import binary_search_mode_list
 
@@ -30,7 +30,7 @@ def wave_func_sum(original_value, part_add, index):
 
 class full_system():
 
-    def __init__(self ,Detector_1_parameter, Detector_2_parameter, photon_energy, Initial_Wave_Function):
+    def __init__(self ,Detector_1_parameter, Detector_2_parameter, energy_window, photon_energy, Initial_Wave_Function):
         dof1, frequency1, nmax1, initial_state1, energy_window1 = Detector_1_parameter
         dof2, frequency2, nmax2, initial_state2, energy_window2 = Detector_2_parameter
 
@@ -42,6 +42,7 @@ class full_system():
         self.sstate = []
         self.dstate1 = []
         self.dstate2 = []
+        self.state_mode_list = []
 
         self.system_state_num = 3
 
@@ -49,6 +50,9 @@ class full_system():
         self.photon_energy = photon_energy
 
         self.system_energy = [0, photon_energy, photon_energy]
+        self.system_mode = [[0,0], [1,0], [0,1]]
+
+        self.energy_window = energy_window
 
         self.state_num = 0
         self.offdiagonal_parameter_number = 0
@@ -102,12 +106,20 @@ class full_system():
         self.mat_detector2_diagonal = []
 
 # ----------------   first part of construcing Hamiltonian. This only have to be called once. --------------------------------
+    def compute_initial_energy(self):
+        self.initial_energy = 0
+        detector1_energy =  np.sum(np.array(self.detector1.frequency ) * np.array(self.detector1.initial_state))
+        detector2_energy = np.sum(np.array(self.detector2.frequency)  * np.array( self.detector2.initial_state) )
+
+        self.initial_energy = self.initial_energy + self.photon_energy + detector1_energy + detector2_energy
 
     def construct_full_system_Hamiltonian_part1(self):
-        self.construct_full_system_diagonal_Hamiltonian()
+        self.compute_initial_energy()
 
         self.detector1.construct_detector_Hamiltonian_part1()
         self.detector2.construct_detector_Hamiltonian_part1()
+
+        self.construct_full_system_diagonal_Hamiltonian()
 
         # compute offdiagonal parameter number
         self.compute_full_system_offdiagonal_parameter_number()
@@ -115,28 +127,34 @@ class full_system():
         # compute position of intra-detector coupling
         self.compute_position_of_intra_detector_coupling()
 
-    def construct_full_system_diagonal_Hamiltonian(self):
-        self.detector1.construct_detector_Hamiltonian_diagonal()
-        self.detector2.construct_detector_Hamiltonian_diagonal()
 
+    def construct_full_system_diagonal_Hamiltonian(self):
         self.state_num = 0
         for i in range(self.system_state_num):
             for j in range(self.detector1.state_num):
                 for k in range(self.detector2.state_num):
-                    # no energy window impose
-                    self.sstate.append(i)
-                    self.dstate1.append(j)
-                    self.dstate2.append(k)
+                    energy = self.system_energy[i] + self.detector1.State_energy_list[j] + \
+                             self.detector2.State_energy_list[k]
+                    if( abs(energy - self.initial_energy) <= self.energy_window ):
+                        # no energy window impose
+                        self.sstate.append(i)
+                        self.dstate1.append(j)
+                        self.dstate2.append(k)
 
-                    energy = self.system_energy[i] + self.detector1.State_energy_list[j] + self.detector2.State_energy_list[k]
-                    self.mat.append( energy )
-                    self.irow.append(self.state_num)
-                    self.icol.append(self.state_num)
-                    self.state_num = self.state_num + 1
+                        state_mode =[]
+                        state_mode.append(self.system_mode[i])
+                        state_mode.append(self.detector1.State_mode_list[j].tolist())
+                        state_mode.append(self.detector2.State_mode_list[k].tolist())
+                        self.state_mode_list.append(state_mode)
 
-                    self.mat_photon.append( self.system_energy[i] )
-                    self.mat_detector1.append(self.detector1.State_energy_list[j])
-                    self.mat_detector2.append(self.detector2.State_energy_list[k])
+                        self.mat.append( energy )
+                        self.irow.append(self.state_num)
+                        self.icol.append(self.state_num)
+                        self.state_num = self.state_num + 1
+
+                        self.mat_photon.append( self.system_energy[i] )
+                        self.mat_detector1.append(self.detector1.State_energy_list[j])
+                        self.mat_detector2.append(self.detector2.State_energy_list[k])
 
 
         self.mat_diagonal_part = self.mat.copy()
@@ -154,6 +172,9 @@ class full_system():
 
         self.mat_detector1_diagonal = self.mat_detector1.copy()
         self.mat_detector2_diagonal = self.mat_detector2.copy()
+
+    def print_state_mode(self):
+        print(self.state_mode_list)
 
     def compute_position_of_intra_detector_coupling(self):
         for i in range(self.state_num):
@@ -413,17 +434,14 @@ class full_system():
 
         self.wave_function = np.zeros(self.state_num, dtype = np.complex)
 
-        self.initial_energy = 0
         for i in range(self.state_num):
             if self.sstate[i] == 1  :
                 if self.dstate1[i] == position1 and self.dstate2[i] == position2 :
                     self.wave_function[i] = self.Initial_Wave_Function[0]
-                    self.initial_energy = self.initial_energy + self.mat[i] * np.power(np.abs(self.wave_function[i]) , 2)
 
             if self.sstate[i] == 2 :
                 if self.dstate1[i] == position1 and self.dstate2[i] == position2 :
                     self.wave_function[i] = self. Initial_Wave_Function[1]
-                    self.initial_energy = self.initial_energy + self.mat[i] * np.power(np.abs(self.wave_function[i]), 2)
 
     def Shift_Hamiltonian(self):
         for i in range(self.state_num):
@@ -461,15 +479,15 @@ class full_system():
         return detector2_energy
 
     def Evolve_dynamics(self):
-        Final_time = config.Time_duration
-        output_time_step = config.output_time_step
+        Final_time = Shared_data.Time_duration
+        output_time_step = Shared_data.output_time_step
 
         # define time step to do simulation
         Max_element = np.max( np.abs(self.mat) )
-        time_step = 1 / Max_element
+        time_step = 0.1 / Max_element
 
         # output step number and total_step_number
-        output_step_number = int(output_time_step / time_step)
+        output_step_number = max( int(output_time_step / time_step) , 1)
         total_step_number = int(Final_time / time_step)
 
         Real_part = np.real(self.wave_function)

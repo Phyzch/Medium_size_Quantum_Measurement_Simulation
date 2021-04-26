@@ -1,11 +1,10 @@
 import numpy as np
-import config
 import matplotlib.pyplot as plt
 from Full_system_class import full_system
 
 from Genetic_algorithm_class import Extend_Genetic_algorithm
 from Fitness_function import fitness_function , Evolve_full_system_and_return_energy_change, Analyze_peak_and_peak_duration
-from Fitness_function import Convert_bit_to_parameter
+from Fitness_function import Convert_bit_to_parameter, fit_func1
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
@@ -13,11 +12,6 @@ rank = comm.Get_rank()
 num_proc = comm.Get_size()
 import os
 
-Time_duration = 500
-output_time_step = 1
-
-config.Time_duration = Time_duration
-config.output_time_step = output_time_step
 
 def Implement_genetic_algorithm(file_path):
     # specify input paramter
@@ -38,12 +32,14 @@ def Implement_genetic_algorithm(file_path):
     energy_window1 = 1
     energy_window2 = 1
 
+    full_system_energy_window = 0
+
     Detector_1_parameter = dof, frequency1, nmax1, initial_state1, energy_window1
     Detector_2_parameter = dof, frequency2, nmax2, initial_state2, energy_window2
 
     Initial_Wavefunction = [1/np.sqrt(2) , 1/np.sqrt(2)]
 
-    population_size_over_all_process = 500
+    population_size_over_all_process = 1000
     # Each process only do their part of work. Thus their population is population_size / num_proc
     population_size = int(population_size_over_all_process / num_proc)
 
@@ -54,8 +50,12 @@ def Implement_genetic_algorithm(file_path):
     Immigration_frequency = 0.1
 
     # Other part of code for full system is called within fitness function in each cycle of genetic algorithm.
-    full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, photon_energy, Initial_Wavefunction)
+    full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window, photon_energy, Initial_Wavefunction)
     full_system_instance.construct_full_system_Hamiltonian_part1()
+
+    # print information about structure of system
+    full_system_instance.print_state_mode()
+    full_system_instance.detector1.output_detector_state_coupling()
 
     parameter_number = full_system_instance.output_offdiagonal_parameter_number()
     bit_per_parameter = 7
@@ -182,7 +182,7 @@ def Implement_genetic_algorithm(file_path):
         with open(filename1, 'w') as f1:
 
             for num in best_param:
-                f1.write(str(num) + "  ")
+                f1.write(str(num) + " , ")
             f1.write('\n')
 
             # compute geometric mean and write to output file.
@@ -199,6 +199,10 @@ def Implement_genetic_algorithm(file_path):
 
             f1.write('best fitness ' + "\n")
             f1.write(str(best_fitness) + '\n')
+
+            best_fitness , Max_energy_fitness_contribution, Localization_duration_ratio_contribution , First_peak_duration_contribution = fit_func1(First_peak_Time_duration,max_energy_change,Localization_duration_ratio,parameter_set_geometric_mean_ratio)
+            f1.write("contribution from  1. Max energy  2. localization duration ratio  3. first peak duartion:   " + "\n")
+            f1.write(str(Max_energy_fitness_contribution) + "  ,  " + str(Localization_duration_ratio_contribution) + "  , " + str(First_peak_duration_contribution) + "\n"  )
 
             f1.write('First_peak_Time_duration, max_energy_change, Localization_duration ' + "\n")
 
