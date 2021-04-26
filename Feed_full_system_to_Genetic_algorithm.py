@@ -19,15 +19,15 @@ def Implement_genetic_algorithm(file_path):
 
     photon_energy = 1
 
-    dof = 3
-    frequency1 = [1, 0.5 , 0.25 ]
-    frequency2 = [1, 0.5 , 0.25 ]
+    dof = 4
+    frequency1 = [1, 0.5 , 0.25 , 1/8 ]
+    frequency2 = [1, 0.5 , 0.25 , 1/8]
 
-    nmax1 = [1, 2, 4]
-    nmax2 = [1, 2 , 4]
+    nmax1 = [1, 2, 4, 8]
+    nmax2 = [1, 2 , 4 , 8]
 
-    initial_state1 = [0,0,0]
-    initial_state2 = [0,0,0]
+    initial_state1 = [0,0,0, 0]
+    initial_state2 = [0,0,0, 0]
 
     energy_window1 = 1
     energy_window2 = 1
@@ -54,9 +54,9 @@ def Implement_genetic_algorithm(file_path):
     full_system_instance.construct_full_system_Hamiltonian_part1()
 
     # print information about structure of system
-    full_system_instance.print_state_mode()
-    full_system_instance.detector1.output_detector_state_coupling()
-    full_system_instance.output_off_diagonal_coupling_mode_info()
+    # full_system_instance.print_state_mode()
+    # full_system_instance.detector1.output_detector_state_coupling()
+    # full_system_instance.output_off_diagonal_coupling_mode_info()
 
     parameter_number = full_system_instance.output_offdiagonal_parameter_number()
     bit_per_parameter = 7
@@ -146,7 +146,7 @@ def Implement_genetic_algorithm(file_path):
         full_system_instance.construct_full_system_Hamiltonian_part2(best_param)
         photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance)
 
-        First_peak_Time_duration, max_energy_change, Localization_duration_ratio = Analyze_peak_and_peak_duration(
+        First_peak_Time_duration, max_energy_change, Localization_duration_ratio, localization_bool = Analyze_peak_and_peak_duration(
             d1_energy_list_change, d2_energy_list_change, Time_list)
 
         # plot simulation result
