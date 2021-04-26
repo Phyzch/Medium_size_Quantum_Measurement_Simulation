@@ -3,6 +3,8 @@ from Constructing_state_module import binary_search_mode_list
 
 class detector():
     def __init__(self , dof, frequency, nmax, initial_state , energy_window):
+        self.energy_window_for_coupling = 0
+
         self.dof = dof
         self.frequency = frequency
         self.nmax = nmax
@@ -144,9 +146,29 @@ class detector():
                             deln[k] = 3
 
                 if(mode_num_diff <= self.coupling_state_distance ):
-                    self.offdiag_coupling_num = self.offdiag_coupling_num + 1
-                    self.dirow.append(i)
-                    self.dicol.append(j)
+                    energy1 = self.State_energy_list[i]
+                    energy2 = self.State_energy_list[j]
+                    energy_diff = np.abs( energy1 - energy2 )
+                    if(energy_diff <= self.energy_window_for_coupling):
+                        self.offdiag_coupling_num = self.offdiag_coupling_num + 1
+                        self.dirow.append(i)
+                        self.dicol.append(j)
+
+        # add given mode coupling
+        if(self.dof >= 3):
+            Coupling_mode1 = np.zeros(self.dof)
+            Coupling_mode1[0] = 1
+
+            Coupling_mode2 = np.zeros(self.dof)
+            Coupling_mode2[2] = 4
+
+            position1, exist1 = binary_search_mode_list(self.State_mode_list, Coupling_mode1 )
+            position2 , exist2 = binary_search_mode_list(self.State_mode_list, Coupling_mode2)
+
+            if(exist1 and exist2):
+                self.offdiag_coupling_num = self.offdiag_coupling_num + 1
+                self.dirow.append( min(position1, position2 ))
+                self.dicol.append(max(position1, position2))
 
         self.dmatnum = len(self.dirow)
 

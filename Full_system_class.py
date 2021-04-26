@@ -247,6 +247,9 @@ class full_system():
         self.offdiagonal_parameter_number = self.offdiagonal_parameter_number +  self.detector1.offdiag_coupling_num
         self.offdiagonal_parameter_number = self.offdiagonal_parameter_number + self.detector2.offdiag_coupling_num
 
+        coupling_num_photon_detector = 0
+        coupling_num_between_detector = 0
+
         # count coupling between system and detector
         for i in range(self.state_num):
             for j in range( i+1 , self.state_num):
@@ -280,6 +283,8 @@ class full_system():
                             self.inter_coupling_irow.append(i)
                             self.inter_coupling_icol.append(j)
 
+                            coupling_num_photon_detector = coupling_num_photon_detector + 1
+
                 # coupling for photon with detector2
                 if(ss == -2 and di1 == dj1 and di2 != dj2):
                     if(self.detector2.State_mode_list[di2][0] - self.detector2.State_mode_list[dj2][0] == 1):
@@ -300,8 +305,12 @@ class full_system():
                             self.irow.append(j)
                             self.icol.append(i)
 
+                            coupling_num_photon_detector = coupling_num_photon_detector + 1
+
                 # coupling between detector1 and detector2
                 if(ss ==0 and di1!= dj1 and di2 != dj2):
+                    if(di1 == 1 and di2 == 3 and dj1 == 2 and dj2 == 2):
+                        print("Found.")
                     for k in range(1,self.detector2.dof):
                         deldv2 = self.detector2.State_mode_list[di2][k] - self.detector2.State_mode_list[dj2][k]
                         if( abs(deldv2) == 1 ):
@@ -316,7 +325,7 @@ class full_system():
                                 break
 
                             for k1 in range(1,self.detector1.dof):
-                                deldv1 = self.detector1.State_mode_list[di1][k] - self.detector1.State_mode_list[dj1][k]
+                                deldv1 = self.detector1.State_mode_list[di1][k1] - self.detector1.State_mode_list[dj1][k1]
                                 if(abs(deldv1) == 1):
                                     zero = 0
                                     for l in range(k1):
@@ -338,6 +347,9 @@ class full_system():
                                     self.irow.append(j)
                                     self.icol.append(i)
 
+                                    coupling_num_between_detector = coupling_num_between_detector + 1
+
+        x = 0
 #  --------------------------------------- first part of construcing Hamiltonian. This only have to be called once. End ---------------------
 
  # -------------------------- Read and output offdiagonal parameter number . Also reverse matrix begin ---------------------
@@ -584,7 +596,7 @@ class full_system():
 
     def output_off_diagonal_coupling_mode_info(self):
         Coupling_mode_list = []
-        for i in range(self.state_num, self.matnum):
+        for i in range(self.state_num, self.matnum , 2):
             irow_index = self.irow[i]
             icol_index = self.icol[i]
 

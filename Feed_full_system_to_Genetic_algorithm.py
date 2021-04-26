@@ -53,10 +53,11 @@ def Implement_genetic_algorithm(file_path):
     full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window, photon_energy, Initial_Wavefunction)
     full_system_instance.construct_full_system_Hamiltonian_part1()
 
-    # print information about structure of system
-    # full_system_instance.print_state_mode()
-    # full_system_instance.detector1.output_detector_state_coupling()
-    # full_system_instance.output_off_diagonal_coupling_mode_info()
+    # if(rank == 0):
+    # # print information about structure of system
+    #     full_system_instance.print_state_mode()
+    #     full_system_instance.detector1.output_detector_state_coupling()
+    #     full_system_instance.output_off_diagonal_coupling_mode_info()
 
     parameter_number = full_system_instance.output_offdiagonal_parameter_number()
     bit_per_parameter = 7

@@ -21,8 +21,9 @@ def Analyze_Born_rule(file_path):
     photon_energy = 1
 
     dof = 3
-    frequency1 = [1, 0.5, 0.25]
-    frequency2 = [1, 0.5, 0.25]
+
+    frequency1 = [1, 0.5,0.25]
+    frequency2 = [1, 0.5,0.25]
 
     nmax1 = [1, 2, 4]
     nmax2 = [1, 2, 4]
@@ -46,9 +47,16 @@ def Analyze_Born_rule(file_path):
     full_system_instance.construct_full_system_Hamiltonian_part1()
 
     # print information about structure of system
-    # full_system_instance.print_state_mode()
-    # full_system_instance.detector1.output_detector_state_coupling()
-    # full_system_instance.output_off_diagonal_coupling_mode_info()
+    if(rank == 0):
+        full_system_instance.print_state_mode()
+        full_system_instance.detector1.output_detector_state_coupling()
+        full_system_instance.output_off_diagonal_coupling_mode_info()
+
+        print( "parameter number for detector1: "  + str(full_system_instance.detector1.offdiag_coupling_num) )
+        print( "parameter number for detector2: " + str(full_system_instance.detector2.offdiag_coupling_num) )
+        print( "paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiagonal_parameter_number -
+                                                                                    full_system_instance.detector1.offdiag_coupling_num -
+                                                                                    full_system_instance.detector2.offdiag_coupling_num))
 
     parameter_number = full_system_instance.output_offdiagonal_parameter_number()
 
