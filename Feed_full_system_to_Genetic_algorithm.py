@@ -15,22 +15,27 @@ import os
 
 def Implement_genetic_algorithm(file_path):
     # specify input paramter
-    coupling_strength = 0.1
+    coupling_strength = 0.01
 
-    photon_energy = 1
+    photon_energy_scale = 1
 
-    dof = 4
-    frequency1 = [1, 0.5 , 0.25 , 1/8 ]
-    frequency2 = [1, 0.5 , 0.25 , 1/8]
+    photon_energy = 1 * photon_energy_scale
 
-    nmax1 = [1, 2, 4, 8]
-    nmax2 = [1, 2 , 4 , 8]
+    dof = 3
+    frequency1 = [1, 0.5 , 0.25 ]
+    frequency2 = [1, 0.5 , 0.25 ]
 
-    initial_state1 = [0,0,0, 0]
-    initial_state2 = [0,0,0, 0]
+    frequency1 = np.array(frequency1) * photon_energy_scale
+    frequency2 = np.array(frequency2) * photon_energy_scale
 
-    energy_window1 = 1
-    energy_window2 = 1
+    nmax1 = [1, 2 , 4]
+    nmax2 = [1, 2, 4 ]
+
+    initial_state1 = [0,0,0]
+    initial_state2 = [0,0,0]
+
+    energy_window1 = 1 * photon_energy_scale
+    energy_window2 = 1 * photon_energy_scale
 
     full_system_energy_window = 0
 
@@ -39,7 +44,7 @@ def Implement_genetic_algorithm(file_path):
 
     Initial_Wavefunction = [1/np.sqrt(2) , 1/np.sqrt(2)]
 
-    population_size_over_all_process = 1000
+    population_size_over_all_process = 100
     # Each process only do their part of work. Thus their population is population_size / num_proc
     population_size = int(population_size_over_all_process / num_proc)
 
@@ -53,11 +58,17 @@ def Implement_genetic_algorithm(file_path):
     full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window, photon_energy, Initial_Wavefunction)
     full_system_instance.construct_full_system_Hamiltonian_part1()
 
-    # if(rank == 0):
-    # # print information about structure of system
-    #     full_system_instance.print_state_mode()
-    #     full_system_instance.detector1.output_detector_state_coupling()
-    #     full_system_instance.output_off_diagonal_coupling_mode_info()
+    if(rank == 0):
+    # print information about structure of system
+        full_system_instance.print_state_mode()
+        full_system_instance.detector1.output_detector_state_coupling()
+        full_system_instance.output_off_diagonal_coupling_mode_info()
+        print( "parameter number for detector1: "  + str(full_system_instance.detector1.offdiag_coupling_num) )
+        print( "parameter number for detector2: " + str(full_system_instance.detector2.offdiag_coupling_num) )
+        print( "paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiagonal_parameter_number -
+                                                                                    full_system_instance.detector1.offdiag_coupling_num -
+                                                                                    full_system_instance.detector2.offdiag_coupling_num))
+
 
     parameter_number = full_system_instance.output_offdiagonal_parameter_number()
     bit_per_parameter = 7

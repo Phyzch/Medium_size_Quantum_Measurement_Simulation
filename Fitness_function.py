@@ -172,11 +172,11 @@ def fit_func1(First_peak_Time_duration, max_energy_change ,  Localization_durati
 
     # Fitness_func_value = 0.5 * pow(max_energy_change, 2 ) + 10 * pow(Localization_duration_ratio , 2) + 60 * First_peak_Time_duration_ratio
 
-    Max_energy_fitness_contribution = 10 * pow(max_energy_change, 2 )
+    Max_energy_fitness_contribution = 5 * pow(max_energy_change, 2 )
 
-    Localization_duration_ratio_contribution = 20 * pow(Localization_duration_ratio , 2)
+    Localization_duration_ratio_contribution = 10 * pow(Localization_duration_ratio , 2)
 
-    First_peak_duration_contribution = First_peak_Time_duration_ratio * 20
+    First_peak_duration_contribution = First_peak_Time_duration_ratio * 60
 
     Fitness_func_value = Max_energy_fitness_contribution + Localization_duration_ratio_contribution + First_peak_duration_contribution
 

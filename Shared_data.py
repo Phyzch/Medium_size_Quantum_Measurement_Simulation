@@ -1,2 +1,2 @@
-Time_duration = 1000
-output_time_step = 1
+Time_duration = 50000
+output_time_step = 100

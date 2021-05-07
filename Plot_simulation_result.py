@@ -39,7 +39,7 @@ def Plot_simulation_result():
     full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window, photon_energy, Initial_Wavefunction)
     full_system_instance.construct_full_system_Hamiltonian_part1()
 
-    off_diagonal_coupling_list = [0.06484375 , 0.013281250000000001 , 0.04296875 , 0.03125 , 0.046875 , 0.03515625 , 0.021875 ,
+    off_diagonal_coupling_list = [0.06484375 , 0.01328125 , 0.04296875 , 0.03125 , 0.046875 , 0.03515625 , 0.021875 ,
                                   0.02265625 , 0.0078125 , 0.04609375 , 0.065625 , 0.040625 , 0.03125,  0.05703125,
                                   0.009375,  0.09296875 , 0.03984375,  0.021875,  0.0375,  0.0945312,  0.03828125 , 0.028125 ,
                                   0.0789062,  0.08984375 , 0.06640625 , 0.0171875 , 0.04765625,  0.065625 , 0.02734375 , 0.096875 , 0.06875 , 0.017968750000000002 , 0.0171875 , 0.02734375  ,0.00625  ,0.02109375,
@@ -50,6 +50,8 @@ def Plot_simulation_result():
                                   0.08046875 , 0.04453125 , 0.01328125,  0.0640625,  0.08984375  ,0.0546875,  0.06875,
                                   0.0375, 0.02421875 , 0.0703125 , 0.0359375,  0.06328125 , 0.02734375 ,
                                   0.08828125 , 0.0625  ,0.09140625,  0.0015625  ]
+
+    off_diagonal_coupling_list = np.array(off_diagonal_coupling_list) / 10
 
     full_system_instance.construct_full_system_Hamiltonian_part2(off_diagonal_coupling_list)
 

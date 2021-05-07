@@ -455,7 +455,7 @@ class full_system():
         self.initialize_wave_function()
 
         # shift Hamiltonian
-        # self.Shift_Hamiltonian()
+        self.Shift_Hamiltonian()
 
 
     def initialize_wave_function(self):
@@ -518,7 +518,7 @@ class full_system():
 
         # define time step to do simulation
         Max_element = np.max( np.abs(self.mat) )
-        time_step = 0.1 / (Max_element)
+        time_step = 0.2 / (Max_element)
 
         # output step number and total_step_number
         output_step_number = max( int(output_time_step / time_step) , 1)
