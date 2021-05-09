@@ -103,6 +103,10 @@ class full_system():
         self.mat_detector1_diagonal = []
         self.mat_detector2_diagonal = []
 
+        # sort state by layer . Record their index and state mode
+        self.state_mode_by_layer = []
+        self.state_index_by_layer = []
+
 # ----------------   first part of construcing Hamiltonian. This only have to be called once. --------------------------------
     def compute_initial_energy(self):
         self.initial_energy = 0
@@ -119,15 +123,21 @@ class full_system():
 
         self.construct_full_system_diagonal_Hamiltonian()
 
+        # Code to write sort index according to their layer. Layer is determined by number of nonzero modes. (2 mode , 3 mode , 4 mode etc).
+        self.Sort_state_by_layer()
+
+
         # compute offdiagonal parameter number
         self.compute_full_system_offdiagonal_parameter_number()
 
         # compute position of intra-detector coupling
         self.compute_position_of_intra_detector_coupling()
 
+        # fixme: decide layer the coupling parameter belong to:
 
-        # fixme: construct irow and icol. (Note for irow,icol. We add offdiagonal part between detector in compute_full_system_offdiagonal_paramter_number())
-        # fixme: Then we add offdiagonal index for same detector below. Same order apply to part that reconstruct offdiagonal part of mat.
+
+        #  construct irow and icol. (Note for irow,icol. We add offdiagonal part between detector in compute_full_system_offdiagonal_paramter_number())
+        #  Then we add offdiagonal index for same detector below. Same order apply to part that reconstruct offdiagonal part of mat.
         intra_detector1_coupling_num = len(self.detector1_coupling_irow)
         for i in range(intra_detector1_coupling_num):
             self.irow.append(self.detector1_coupling_irow[i])
@@ -191,6 +201,54 @@ class full_system():
 
         self.mat_detector1_diagonal = self.mat_detector1.copy()
         self.mat_detector2_diagonal = self.mat_detector2.copy()
+
+    def Sort_state_by_layer(self):
+        dof = self.detector1.dof
+        for layer_dof in range(2, dof+1):
+            index_list = []
+            mode_number_list = []
+            for i in range(self.state_num):
+                state_mode = self.state_mode_list[i]
+                detector1_state_mode = state_mode[1]
+                detector2_state_mode = state_mode[2]
+                if(layer_dof == 2):
+                    # we include mode 0 and mode 1 state. Thus we do not check mode 2 is nonzero but only require mode 3 ~ higher order is 0
+                    Zero_bool = True
+                    for j in range(layer_dof, dof):
+                        if(detector1_state_mode[j] != 0):
+                            Zero_bool = False
+                            break
+                        if(detector2_state_mode[j] != 0):
+                            Zero_bool = False
+                            break
+
+                    if(Zero_bool == True):
+                        index_list.append(i)
+                        mode_number_list.append(state_mode)
+
+                else:
+                    if(detector1_state_mode[layer_dof - 1] != 0 and detector2_state_mode[layer_dof - 1] !=0 ):
+                        Zero_bool = True
+                        for j in range(layer_dof, dof):
+                            if(detector1_state_mode[j]!= 0):
+                                Zero_bool = False
+                                break
+                            if(detector2_state_mode[j]!=0):
+                                Zero_bool = False
+                                break
+
+                        if(Zero_bool == True):
+                            index_list.append(i)
+                            mode_number_list.append(state_mode)
+
+            self.state_mode_by_layer.append(mode_number_list)
+            self.state_index_by_layer.append(index_list)
+
+    def Sort_coupling_by_layer(self):
+        x=0
+
+
+
 
     def print_state_mode(self):
         print(self.state_mode_list)

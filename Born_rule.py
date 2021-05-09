@@ -226,10 +226,9 @@ def Analyze_Localization_prob(iteration_number_per_core,Max_energy_change_list ,
                 f2.write(str(j) + " ")
             f2.write('\n')
 
-            parameter_list_len  = len(Left_Max_energy_change_list)
+            parameter_list_len  = len(Max_energy_change_list)
             for i in range(parameter_list_len):
-                if Localization_side_list[i] == 1:
-
+                if(Localization_side_list[i] == 1):
                     parameter = parameter_list[i]
                     for j in parameter:
                         f2.write(str(j) + ' ')
@@ -248,7 +247,7 @@ def Analyze_Localization_prob(iteration_number_per_core,Max_energy_change_list ,
 
             f3.write('\n')
 
-            parameter_len = len(Right_Max_energy_change_list)
+            parameter_len = len(Max_energy_change_list)
             for i in range(parameter_len):
                 if Localization_side_list[i] == 2:
 
