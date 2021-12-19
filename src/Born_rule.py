@@ -1,4 +1,3 @@
-import Shared_data
 import numpy as np
 import os
 
@@ -6,7 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 from Fitness_function import Evolve_full_system_and_return_energy_change, Analyze_peak_and_peak_duration
 
-from Full_system_class import full_system
+import include.Shared_data
+from include.Full_system_class import full_system
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD

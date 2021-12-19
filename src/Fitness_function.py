@@ -4,57 +4,8 @@ from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 num_proc = comm.Get_size()
-import Shared_data
-from Full_system_class import full_system
-
-def Convert_bit_to_parameter( bit_array , maximum_coupling_strength, parameter_number, bit_per_parameter ):
-    '''
-    :param: bit_array:  array of bit we have to convert to parameter set
-    :param: delta: maximum range of parameter
-    :param parameter_number: number of parameter we have to convert
-    :param bit_per_parameter: each paramter, we have several bits
-        Bit form is the one we used for Genetic algorithm.
-    When do simulation, we convert bit to parameters
-    :return: parameter set
-    '''
-
-    if(len(bit_array) != parameter_number * bit_per_parameter):
-        raise NameError(' length of bit_array does not equal to parameter_number * bit_per_parameter ')
-
-    parameter_set = []
-    for n in range(parameter_number):
-        Bit = bit_array[ n*bit_per_parameter : (n+1) * bit_per_parameter ]
-        parameter = 0
-        for j in Bit :
-            parameter = parameter * 2 + j
-
-        parameter = parameter * maximum_coupling_strength
-
-        parameter = parameter / pow(2,bit_per_parameter)
-
-        parameter_set.append(parameter)
-
-    return parameter_set
-
-def Convert_parameter_to_bit (parameter_set, maximum_coupling_strength, parameter_number, bit_per_parameter):
-    if(len(parameter_set) != parameter_number):
-        raise NameError('length of parameter set is not equal  to parameter number')
-
-    Bit_array = []
-
-    for i in range(parameter_number):
-        parameter = parameter_set[i]
-        Number = int(np.floor(parameter/ maximum_coupling_strength * pow(2,bit_per_parameter) ))
-
-        # convert number to bit
-        Bit = []
-        for j in range(bit_per_parameter):
-            Bit.append(  int(Number / pow(2,bit_per_parameter - j - 1)) )
-            Number = Number % pow(2,bit_per_parameter - j - 1 )
-
-        Bit_array = Bit_array + Bit
-
-    return Bit_array
+import include.Shared_data
+from include.Full_system_class import full_system
 
 def Analyze_peak_and_peak_duration(e2l_change, e2r_change , Time ) :
 
@@ -166,7 +117,7 @@ def fit_func1(First_peak_Time_duration, max_energy_change ,  Localization_durati
 
     '''
     # ratio of first peak duration.
-    Time_duration = Shared_data.Time_duration
+    Time_duration = include.Shared_data.Time_duration
 
     First_peak_Time_duration_ratio = First_peak_Time_duration / Time_duration * parameter_geometric_mean_ratio
 
@@ -199,11 +150,9 @@ def Evolve_full_system_and_return_energy_change(full_system_instance , off_diago
 
     return photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list
 
-def fitness_function(bit_array , data ):
+def fitness_function(off_diagonal_coupling , data ):
      # data is maximum range of coupling strength
-     coupling_strength , full_system_instance, bit_per_parameter, parameter_number = data
-
-     off_diagonal_coupling = Convert_bit_to_parameter(bit_array, coupling_strength, parameter_number, bit_per_parameter)
+     parameter_range , full_system_instance, parameter_number = data
 
      # construct off diagonal part of Hamiltonian. and initialize wave function
      photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance , off_diagonal_coupling)
@@ -216,7 +165,7 @@ def fitness_function(bit_array , data ):
          geometric_mean = geometric_mean * pow(off_diagonal_coupling[i] , 1/parameter_number)
 
 
-     geometric_mean_ratio = geometric_mean / coupling_strength
+     geometric_mean_ratio = geometric_mean / parameter_range
 
      fitness_func_value , Max_energy_fitness_contribution, Localization_duration_ratio_contribution , First_peak_duration_contribution  = fit_func1(First_peak_Time_duration, max_energy_change, Localization_duration_ratio,
                                    geometric_mean_ratio)

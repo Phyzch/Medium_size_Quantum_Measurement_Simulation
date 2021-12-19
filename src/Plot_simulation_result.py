@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib
 
 import matplotlib.pyplot as plt
-from Full_system_class import full_system
+from include.Full_system_class import full_system
 from Fitness_function import Evolve_full_system_and_return_energy_change
 
 from mpi4py import MPI
