@@ -7,8 +7,8 @@ rank = comm.Get_rank()
 num_proc = comm.Get_size()
 
 def main():
-    # file_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Genetic_algorithm/3_mode/"
-    # Implement_genetic_algorithm(file_path)
+    file_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Genetic_algorithm/3_mode/"
+    Implement_genetic_algorithm(file_path)
 
     # Plot_simulation_result()
 

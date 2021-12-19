@@ -50,17 +50,15 @@ def Analyze_left_right_localization_dist(folder_path):
     ax_1 = fig.add_subplot(spec[0, 0])
     ax_2 = fig.add_subplot(spec[0, 1])
 
-    ax_1.Axes.hist(left_localization_energy_list, bins = block_num, range = (0,1) , density = True)
+    ax_1.hist(left_localization_energy_list, bins = block_num, range = (0,1) , density = True)
     ax_1.set_ylabel('prob dist. ')
     ax_1.set_title('left side.   Localization prob =   ' + str( round(theoretical_localization_prob[0] , 3) )  )
 
-    ax_2.Axes.hist(right_localization_energy_list, bins = block_num, range = (0,1) , density = True)
+    ax_2.hist(right_localization_energy_list, bins = block_num, range = (0,1) , density = True)
     ax_2.set_ylabel('prob dist. ')
     ax_2.set_title('right side. Localization prob =  ' + str(round( theoretical_localization_prob[1] , 3 )))
 
     plt.show()
 
-# folder_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Born_rule/Peak_maximum_criteria/2_mode/0.25_0.75/"
-# Analyze_left_right_localization_dist(folder_path)
 
 

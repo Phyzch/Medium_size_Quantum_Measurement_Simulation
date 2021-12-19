@@ -78,9 +78,7 @@ def Analyze_Born_rule(file_path):
         # randomly generate parameter according to coupling strength:
         Coupling_param = np.random.normal(0, coupling_strength, parameter_number)
 
-        full_system_instance.construct_full_system_Hamiltonian_part2(Coupling_param)
-
-        photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance)
+        photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance , Coupling_param)
 
         First_peak_Time_duration, max_energy_change, Localization_duration_ratio, localization_bool = Analyze_peak_and_peak_duration(
             d1_energy_list_change, d2_energy_list_change, Time_list)

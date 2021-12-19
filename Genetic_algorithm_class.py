@@ -31,8 +31,7 @@ class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
                          mutation_probability=mutation_probability, elitism=elitism,
                          maximise_fitness=maximise_fitness)
 
-        # first list for fitness function. Record all result computed in history
-        # Second list for genes. Record all result computed in history.
+        #  Record all result computed in history
         self.Biglist_genes = []
         self.Biglist_fitness = []
 
@@ -76,9 +75,9 @@ class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
         immigrate population between different process.
         :return:
         '''
-        immigrant_index_list = []
 
         # clear immigrant list
+        immigrant_index_list = []
         self.immigrant_list = []
         immigrant_num = 0
 
@@ -174,12 +173,6 @@ class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
             # parent_2 should be different from parent_1. Same parents are not allowed to mate
             parent_2 = copy.deepcopy(selection(self.current_generation))
 
-            # parent_2 = copy.deepcopy(parent_1)
-            # if self.population_size>=2 :
-            #     while(parent_2.genes == parent_1.genes):
-            #         parent_2 = copy.deepcopy(selection(self.current_generation))
-
-
             child_1, child_2 = parent_1, parent_2
 
             can_crossover = random.random() < self.crossover_probability
@@ -227,7 +220,7 @@ class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
         crossover_index = random.randrange(1, parameter_number)
         index = crossover_index * bit_per_parameter
         child_1 = parent_1[:index] + parent_2[index:]
-        child_2 = parent_1[index:] + parent_2[:index]
+        child_2 = parent_2[:index] + parent_1[index:]
 
         return child_1, child_2
 
@@ -251,6 +244,7 @@ class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
             if individual.fitness == 0:
                 # search if this genes is already in Biglist_genes list. This approach is taken only when computation of cost function is extremley expensive
                 if( individual.genes not in self.Biglist_genes ):
+                    # fitness function is main computation part:  We run SUR algorithm and analyze P(t) results.
                     individual.fitness = self.fitness_function(
                         individual.genes, self.seed_data)
                     self.Biglist_genes.append(individual.genes)

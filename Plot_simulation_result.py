@@ -53,9 +53,7 @@ def Plot_simulation_result():
 
     off_diagonal_coupling_list = np.array(off_diagonal_coupling_list) / 10
 
-    full_system_instance.construct_full_system_Hamiltonian_part2(off_diagonal_coupling_list)
-
-    photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list  = Evolve_full_system_and_return_energy_change(full_system_instance)
+    photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list  = Evolve_full_system_and_return_energy_change(full_system_instance , off_diagonal_coupling_list)
 
     # plot simulation result
     fig1, ax1 = plt.subplots(nrows=1, ncols=1)

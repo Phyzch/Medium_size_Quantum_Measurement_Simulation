@@ -2,15 +2,16 @@ import numpy as np
 from Constructing_state_module import binary_search_mode_list
 
 class detector():
-    def __init__(self , dof, frequency, nmax, initial_state , energy_window):
-        self.energy_window_for_coupling = 0
+    def __init__(self , dof, frequency, nmax, initial_state , energy_window , energy_window_for_coupling):
+        #fixme: we also have energy window cutoff for states to couple with each other
+        self.energy_window_for_coupling = energy_window_for_coupling
 
         self.dof = dof
         self.frequency = frequency
         self.nmax = nmax
         self.initial_state = initial_state
         self.energy_window = energy_window
-        self.coupling_state_distance = 3
+        self.coupling_state_distance = 4
         self.State_energy_list = []
         self.State_mode_list = []
 
@@ -23,13 +24,12 @@ class detector():
         self.state_num = 0
         self.offdiag_coupling_num = 0
         self.dmatnum = 0
+        # off diagonal coupling element between states in molecules.
         self.offdiag_coupling_element_list = []
+
         self.wave_function = []
 
-    def construct_detector_state_sphere_cutoff(self):
-        '''
-               :return:
-        '''
+    def construct_detector_Hamiltonian_diagonal(self):
         if (len(self.initial_state) != self.dof):
             print("Wrong. initial state doesn't have right dof")
 
@@ -82,8 +82,9 @@ class detector():
             # now put this state into list which is ordered.
             position, exist = binary_search_mode_list(State_mode_list, mode_number)
             if (exist == False):
+                # In python, we should deep copy the file we intended to use
                 mode_number_copy = np.copy(mode_number)
-                modenumber_copy = np.array([int(mode_number_copy[i]) for i in range(self.dof)])
+                mode_number_copy = np.array([int(mode_number_copy[i]) for i in range(self.dof)])
                 State_mode_list.insert(position, mode_number_copy)
                 State_energy_list.insert(position, energy)
 
@@ -91,8 +92,6 @@ class detector():
         self.State_mode_list = State_mode_list
         self.state_num = len(self.State_energy_list)
 
-    def construct_detector_Hamiltonian_diagonal(self):
-        self.construct_detector_state_sphere_cutoff()
         for i in range(self.state_num):
             self.dmat.append(self.State_energy_list[i])
             self.dirow.append(i)
@@ -100,20 +99,9 @@ class detector():
 
         self.dmat_diagonal = self.dmat.copy()
 
-    def Reverse_dmat(self):
-        self.dmat = self.dmat_diagonal.copy()
-
-
     def output_offdiag_coupling_num(self):
         return self.offdiag_coupling_num
 
-    def read_offdiag_coupling_element(self , offdiag_coupling_element_list):
-        '''
-
-        :param offdiag_coupling_element_list: This should read from Genetic algorithm.
-        :return:
-        '''
-        self.offdiag_coupling_element_list = offdiag_coupling_element_list.copy()
 
     def calculate_offdiag_coupling_num(self):
         '''
@@ -125,7 +113,7 @@ class detector():
             for j in range( i + 1, self.state_num):
                 mode_state1 = self.State_mode_list[i]
                 mode_state2 = self.State_mode_list[j]
-                deln = []
+
                 deln = np.abs(np.array(mode_state1) - np.array(mode_state2) )
                 mode_num_diff = np.sum ( deln  )
                 if (mode_num_diff == 0):
@@ -149,30 +137,33 @@ class detector():
                     energy1 = self.State_energy_list[i]
                     energy2 = self.State_energy_list[j]
                     energy_diff = np.abs( energy1 - energy2 )
+
+                    # usually we will use cutoff criteria V / \Delta E. But now V should be sampled from Genetic algorithm, thus we use energy window cutoff for coupling.
                     if(energy_diff <= self.energy_window_for_coupling):
                         self.offdiag_coupling_num = self.offdiag_coupling_num + 1
                         self.dirow.append(i)
                         self.dicol.append(j)
 
         # add given mode coupling
-        if(self.dof >= 3):
-            Coupling_mode1 = np.zeros(self.dof)
-            Coupling_mode1[0] = 1
-
-            Coupling_mode2 = np.zeros(self.dof)
-            Coupling_mode2[2] = 4
-
-            position1, exist1 = binary_search_mode_list(self.State_mode_list, Coupling_mode1 )
-            position2 , exist2 = binary_search_mode_list(self.State_mode_list, Coupling_mode2)
-
-            if(exist1 and exist2):
-                self.offdiag_coupling_num = self.offdiag_coupling_num + 1
-                self.dirow.append( min(position1, position2 ))
-                self.dicol.append(max(position1, position2))
+        # if(self.dof >= 3):
+        #     Coupling_mode1 = np.zeros(self.dof)
+        #     Coupling_mode1[0] = 1
+        #
+        #     Coupling_mode2 = np.zeros(self.dof)
+        #     Coupling_mode2[2] = 4
+        #
+        #     position1, exist1 = binary_search_mode_list(self.State_mode_list, Coupling_mode1 )
+        #     position2 , exist2 = binary_search_mode_list(self.State_mode_list, Coupling_mode2)
+        #
+        #     if(exist1 and exist2):
+        #         self.offdiag_coupling_num = self.offdiag_coupling_num + 1
+        #         self.dirow.append( min(position1, position2 ))
+        #         self.dicol.append(max(position1, position2))
 
         self.dmatnum = len(self.dirow)
 
     def output_detector_state_coupling(self):
+        # output information about detector state coupling in form of [state_mode1 , state_mode2]
         Coupling_mode_info = []
         for i in range(self.state_num , self.dmatnum):
             coupling_mode = []
@@ -186,15 +177,13 @@ class detector():
         for i in range(Len):
             print(Coupling_mode_info[i])
 
-    def construct_offdiag_coupling_element(self):
-        if( len(self.offdiag_coupling_element_list) != self.offdiag_coupling_num ):
-            raise NameError('offdiagonal coupling element input from Genetic_algorithm does not have right length')
+    def read_offdiag_coupling_element(self , offdiag_coupling_element_list):
+        '''
 
-
-        # dirow, dicol is already add in list in calculate_offdiag_coupling_num(self)
-        for coupling_index in range(self.offdiag_coupling_num):
-            self.dmat.append(self.offdiag_coupling_element_list[coupling_index])
-
+        :param offdiag_coupling_element_list: This should read from Genetic algorithm.
+        :return:
+        '''
+        self.offdiag_coupling_element_list = offdiag_coupling_element_list.copy()
 
 
     def construct_detector_Hamiltonian_part1(self):
@@ -205,22 +194,27 @@ class detector():
         :return:
         '''
 
-        # construct state
-        self.construct_detector_state_sphere_cutoff()
-
         # construct state's Hamiltonian diagonal part
         self.construct_detector_Hamiltonian_diagonal()
 
         # calculate state's offdiagonal coupling
         self.calculate_offdiag_coupling_num()
 
-    def construct_detector_Hamiltonian_part2(self):
+    def construct_detector_Hamiltonian_part2(self , offdiag_coupling_element_list):
         '''
         Now we get off-diagonal-coupling_list_element. Continue our way of constructing Hamiltonian
         :return:
         '''
+
+        # read off diagonal coupling element.
+        self.offdiag_coupling_element_list = offdiag_coupling_element_list.copy()
         # construct offdiagonal coupling element
-        self.construct_offdiag_coupling_element()
+        if( len(self.offdiag_coupling_element_list) != self.offdiag_coupling_num ):
+            raise NameError('offdiagonal coupling element input from Genetic_algorithm does not have right length')
+
+        # dirow, dicol is already add in list in calculate_offdiag_coupling_num(self)
+        for coupling_index in range(self.offdiag_coupling_num):
+            self.dmat.append(self.offdiag_coupling_element_list[coupling_index])
 
     def initialize_wave_function(self):
         position, exist = binary_search_mode_list(self.State_mode_list, self.initial_state)
@@ -229,4 +223,8 @@ class detector():
 
         self.wave_function = np.zeros(self.state_num , dtype = np.complex)
         self.wave_function[position] = 1
+
+    def Reverse_dmat(self):
+        # when we use new coupling coefficient in Genetic algorithm, we have to reverse detector matrix back to original form.
+        self.dmat = self.dmat_diagonal.copy()
 

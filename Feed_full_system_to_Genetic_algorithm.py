@@ -14,7 +14,7 @@ import os
 
 
 def Implement_genetic_algorithm(file_path):
-    # specify input paramter
+    # - -------  specify input paramter for detector and full system  ----------------
     coupling_strength = 0.01
 
     photon_energy_scale = 1
@@ -34,16 +34,23 @@ def Implement_genetic_algorithm(file_path):
     initial_state1 = [0,0,0]
     initial_state2 = [0,0,0]
 
+    # energy window for detector 1 and detector 2 to include state
     energy_window1 = 1 * photon_energy_scale
     energy_window2 = 1 * photon_energy_scale
 
+    # energy window for coupling of states in detector 1 and detector 2.
+    energy_window_for_coupling_for_detector1 = 0
+    energy_window_for_coupling_for_detector2 = 0
+
     full_system_energy_window = 0
 
-    Detector_1_parameter = dof, frequency1, nmax1, initial_state1, energy_window1
-    Detector_2_parameter = dof, frequency2, nmax2, initial_state2, energy_window2
+    Detector_1_parameter = dof, frequency1, nmax1, initial_state1, energy_window1 , energy_window_for_coupling_for_detector1
+    Detector_2_parameter = dof, frequency2, nmax2, initial_state2, energy_window2 , energy_window_for_coupling_for_detector2
 
-    Initial_Wavefunction = [1/np.sqrt(2) , 1/np.sqrt(2)]
+    initial_photon_wavefunction = [1/np.sqrt(2) , 1/np.sqrt(2)]
+    # ------------------------------------- End specify parameter for full system and photon ----------
 
+    # ------- declare variable for Genetic algorithm simulation ---------------------
     population_size_over_all_process = 100
     # Each process only do their part of work. Thus their population is population_size / num_proc
     population_size = int(population_size_over_all_process / num_proc)
@@ -54,8 +61,8 @@ def Implement_genetic_algorithm(file_path):
     Immigration_ratio = 0.2
     Immigration_frequency = 0.1
 
-    # Other part of code for full system is called within fitness function in each cycle of genetic algorithm.
-    full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window, photon_energy, Initial_Wavefunction)
+    #  Initialize full system and construct first part of Hamiltonian.
+    full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window, photon_energy, initial_photon_wavefunction )
     full_system_instance.construct_full_system_Hamiltonian_part1()
 
     if(rank == 0):
@@ -76,6 +83,8 @@ def Implement_genetic_algorithm(file_path):
     # Prepare seed_data for genetic algorithm
     data = [coupling_strength , full_system_instance, bit_per_parameter, parameter_number]
 
+    # --------------------------------- End  prepare variable for Genetic algorithm simulation -------------------
+
     # file
     f2 = 0
 
@@ -84,8 +93,10 @@ def Implement_genetic_algorithm(file_path):
         filename = os.path.join(file_path,filename)
         f2 = open(filename, 'w')
         f2.write('population_size:  ' + str(population_size) + '\n')
-        f2.write('population_size_in_all_process  ' + str(population_size_over_all_process) + '\n')
-        f2.write('number of process  ' + str(num_proc) + '\n')
+        f2.write('population_size_in_all_process:  ' + str(population_size_over_all_process) + '\n')
+        f2.write('number of process:  ' + str(num_proc) + '\n')
+
+    # ---------------------- initialize Genetic algorithm and do Genetic algorithm ---------------------------------------
 
     ga  = Extend_Genetic_algorithm(data, population_size = population_size, generations = generations, crossover_probability = crossover_prob, mutation_probability = mutation_prob,
                                     elitism = True, maximise_fitness = True, immigration_ratio= Immigration_ratio , immigrantion_frequency= Immigration_frequency , info_file = f2)
@@ -94,11 +105,13 @@ def Implement_genetic_algorithm(file_path):
 
     ga.run()
 
+    # ----------------- End of Genetic algorithm ----------------------------------------
+
     if(rank == 0):
         f2.close()
 
 
-    # Evaluate result:
+    #------------------  Evaluate result of Genetic algorithm ----------------------
 
     # output last generations and their fitfunction.
     Last_generation = ga.last_generation()
@@ -113,8 +126,8 @@ def Implement_genetic_algorithm(file_path):
         bit = Last_generation_bit_array[i]
         parameter = Convert_bit_to_parameter(bit, coupling_strength, parameter_number,bit_per_parameter )
         Parameter_set.append(parameter)
-    # use MPI to send Last_generation_fitness_func and Last_generation_bit_array
 
+    # use MPI to send Last_generation_fitness_func and Last_generation_bit_array
     # prepare sending data
     send_param = np.array(Parameter_set)
     send_fitness = np.array(np.real(Last_generation_fitness_func))
@@ -155,10 +168,9 @@ def Implement_genetic_algorithm(file_path):
         fitness_for_all = fitness_for_all[Sort_index]
 
         # plot best parameter simulation result
-        full_system_instance.construct_full_system_Hamiltonian_part2(best_param)
-        photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance)
+        photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance , best_param)
 
-        First_peak_Time_duration, max_energy_change, Localization_duration_ratio, localization_bool = Analyze_peak_and_peak_duration(
+        First_peak_Time_duration_best_param, max_energy_change_best_param, Localization_duration_ratio_best_param, localization_bool = Analyze_peak_and_peak_duration(
             d1_energy_list_change, d2_energy_list_change, Time_list)
 
         # plot simulation result
@@ -188,6 +200,7 @@ def Implement_genetic_algorithm(file_path):
                 f.write('\n')
                 f.write(str(fitness_for_all[i]))
                 f.write('\n')
+                f.write('\n')
 
         # save best simulation result found
         filename1 = 'best_parameter_and_fitness_function.txt'
@@ -213,14 +226,17 @@ def Implement_genetic_algorithm(file_path):
             f1.write('best fitness ' + "\n")
             f1.write(str(best_fitness) + '\n')
 
-            best_fitness , Max_energy_fitness_contribution, Localization_duration_ratio_contribution , First_peak_duration_contribution = fit_func1(First_peak_Time_duration,max_energy_change,Localization_duration_ratio,parameter_set_geometric_mean_ratio)
+            best_fitness , Max_energy_fitness_contribution, Localization_duration_ratio_contribution , First_peak_duration_contribution = fit_func1(First_peak_Time_duration_best_param,
+                                                                                                                                                    max_energy_change_best_param,
+                                                                                                                                                    Localization_duration_ratio_best_param,
+                                                                                                                                                    parameter_set_geometric_mean_ratio)
             f1.write("contribution from  1. Max energy  2. localization duration ratio  3. first peak duartion:   " + "\n")
             f1.write(str(Max_energy_fitness_contribution) + "  ,  " + str(Localization_duration_ratio_contribution) + "  , " + str(First_peak_duration_contribution) + "\n"  )
 
             f1.write('First_peak_Time_duration, max_energy_change, Localization_duration ' + "\n")
 
-            f1.write(str(First_peak_Time_duration) + "  " + str(max_energy_change) + "  " + str(
-                Localization_duration_ratio) + "\n")
+            f1.write(str(First_peak_Time_duration_best_param) + "  " + str(max_energy_change_best_param) + "  " + str(
+                Localization_duration_ratio_best_param) + "\n")
 
             f1.write('Time: ' + '\n')
 
