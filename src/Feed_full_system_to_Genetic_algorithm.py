@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from include.Full_system_class import full_system
 
 from include.Genetic_algorithm_class import Extend_Genetic_algorithm
-from Fitness_function import fitness_function , Evolve_full_system_and_return_energy_change, Analyze_peak_and_peak_duration
-from Fitness_function import Convert_bit_to_parameter, fit_func1
+from Fitness_function import fitness_function , Evolve_full_system_and_return_energy_change, Analyze_peak_and_peak_duration , fit_func1
+
 from include.util import Broadcast_data
 from mpi4py import MPI
 comm = MPI.COMM_WORLD

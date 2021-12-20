@@ -45,9 +45,9 @@ class full_system():
     Time_duration = 50000
     output_time_step = 100
 
-    from ._construct_full_sys_hamiltonian_part1 import construct_full_system_Hamiltonian_part1
+    from ._construct_full_sys_hamiltonian_part1 import construct_full_system_Hamiltonian_part1,__construct_full_system_diagonal_Hamiltonian , __construct_offdiag_dd_pd_coup, __compute_initial_energy , __compute_position_of_intra_detector_coupling
     from ._read_output_func import read_offdiag_coupling_element, output_offdiagonal_parameter_number, output_state_mode, output_off_diagonal_coupling_mode_info
-    from ._construct_full_sys_hamiltonian_part2 import construct_full_system_Hamiltonian_part2
+    from ._construct_full_sys_hamiltonian_part2 import construct_full_system_Hamiltonian_part2 , __reverse_mat_diag_form , __construct_full_system_offdiag_coupling , __Shift_Hamiltonian
     from ._evolve_wave_func import initialize_wave_function , Evolve_dynamics, __evaluate_d_energy , __evaluate_photon_energy
 
     def __init__(self, Detector_1_parameter, Detector_2_parameter, energy_window, photon_energy, initial_photon_wave_function):
