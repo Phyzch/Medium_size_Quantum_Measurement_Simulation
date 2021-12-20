@@ -2,7 +2,10 @@ import numpy as np
 from Constructing_state_module import binary_search_mode_list
 
 class detector():
-    def __init__(self , dof, frequency, nmax, initial_state , energy_window , energy_window_for_coupling):
+    def __init__(self , *args):
+        Detector1_param = args
+        dof, frequency, nmax, initial_state, energy_window, energy_window_for_coupling = Detector1_param
+
         #fixme: we also have energy window cutoff for states to couple with each other
         self.energy_window_for_coupling = energy_window_for_coupling
 
@@ -13,7 +16,7 @@ class detector():
         self.energy_window = energy_window
         self.coupling_state_distance = 4
         self.State_energy_list = []
-        self.State_mode_list = []
+        self.state_mode_list = []
 
         self.dmat = []
         self.dirow = []
@@ -89,7 +92,7 @@ class detector():
                 State_energy_list.insert(position, energy)
 
         self.State_energy_list = State_energy_list
-        self.State_mode_list = State_mode_list
+        self.state_mode_list = State_mode_list
         self.state_num = len(self.State_energy_list)
 
         for i in range(self.state_num):
@@ -111,8 +114,8 @@ class detector():
         '''
         for i in range(self.state_num):
             for j in range( i + 1, self.state_num):
-                mode_state1 = self.State_mode_list[i]
-                mode_state2 = self.State_mode_list[j]
+                mode_state1 = self.state_mode_list[i]
+                mode_state2 = self.state_mode_list[j]
 
                 deln = np.abs(np.array(mode_state1) - np.array(mode_state2) )
                 mode_num_diff = np.sum ( deln  )
@@ -167,8 +170,8 @@ class detector():
         Coupling_mode_info = []
         for i in range(self.state_num , self.dmatnum):
             coupling_mode = []
-            coupling_mode.append(self.State_mode_list[self.dirow[i]].tolist() )
-            coupling_mode.append(self.State_mode_list[self.dicol[i]].tolist() )
+            coupling_mode.append(self.state_mode_list[self.dirow[i]].tolist())
+            coupling_mode.append(self.state_mode_list[self.dicol[i]].tolist())
 
             Coupling_mode_info.append(coupling_mode)
 
@@ -217,7 +220,7 @@ class detector():
             self.dmat.append(self.offdiag_coupling_element_list[coupling_index])
 
     def initialize_wave_function(self):
-        position, exist = binary_search_mode_list(self.State_mode_list, self.initial_state)
+        position, exist = binary_search_mode_list(self.state_mode_list, self.initial_state)
         if(exist == False):
             raise NameError("Wrong . Initial state not in state space")
 

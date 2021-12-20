@@ -191,9 +191,11 @@ class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
 
 #  --------------------------------------------------------------------------------------------
 
+# ---------------- Calculate fitness function for Genetic algorithm ----------------------------
     def calculate_population_fitness(self):
         """Calculate the fitness of every member of the given population using
         the supplied fitness_function.
+        This function is most time-consuming part for genetic algorithm.
          We only compute fitness function for mutated and crossovered genes, which is 0.
         """
         for individual in self.current_generation:

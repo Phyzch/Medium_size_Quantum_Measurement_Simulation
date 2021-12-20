@@ -58,7 +58,7 @@ def Analyze_Born_rule(file_path):
 
         print( "parameter number for detector1: "  + str(full_system_instance.detector1.offdiag_coupling_num) )
         print( "parameter number for detector2: " + str(full_system_instance.detector2.offdiag_coupling_num) )
-        print( "paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiagonal_parameter_number -
+        print( "paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiag_param_num -
                                                                                     full_system_instance.detector1.offdiag_coupling_num -
                                                                                     full_system_instance.detector2.offdiag_coupling_num))
 
