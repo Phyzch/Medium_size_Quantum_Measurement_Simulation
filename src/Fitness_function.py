@@ -4,8 +4,7 @@ from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 num_proc = comm.Get_size()
-import include.Shared_data
-from include.Full_system_class import full_system
+from include.full_system_class.Full_system_class import full_system
 
 def Analyze_peak_and_peak_duration(e2l_change, e2r_change , Time ) :
 

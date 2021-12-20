@@ -1,5 +1,5 @@
 import numpy as np
-from Constructing_state_module import binary_search_mode_list
+from include.Constructing_state_module import binary_search_mode_list
 
 class detector():
     def __init__(self , *args):
