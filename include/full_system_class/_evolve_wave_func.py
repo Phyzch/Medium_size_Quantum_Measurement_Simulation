@@ -5,6 +5,10 @@ from include.Constructing_state_module import binary_search_mode_list
 import numba
 from numba import jit
 
+'''
+Evolve Hamiltonian on basis set and compute energy of photon & detectors.
+'''
+
 @jit(nopython = True)
 def wave_func_sum(original_value, part_add, index):
     '''
@@ -17,7 +21,6 @@ def wave_func_sum(original_value, part_add, index):
         original_value[index_i] = original_value[index_i] + part_add[i]
 
     return original_value
-
 
 # ----------- initialize wave function -----------------------------
 def initialize_wave_function(self):
@@ -36,7 +39,6 @@ def initialize_wave_function(self):
             if self.sstate[i] == 2:
                 self.wave_function[i] = self.initial_photon_wave_function[1]
 
-
 # ----------- Evolve Schrodinger equation on basis set. -------------------------
 def check_energy_conservation(time_step, Time_list, d1_energy_list, d2_energy_list, photon_energy_list ):
     Total_energy = d1_energy_list + d2_energy_list + photon_energy_list
@@ -47,7 +49,6 @@ def check_energy_conservation(time_step, Time_list, d1_energy_list, d2_energy_li
             print('time: ' + str(Time_list[i]))
             print('photon energy :  ' + str(photon_energy_list[i]) + ' detector1 energy:  ' + str(d1_energy_list[i]) +"   detector2 energy:  " + str(d2_energy_list[i]) )
             raise NameError("SUR algorithm do not converge energy. Check code for error")
-
 
 def Evolve_dynamics(self):
     final_time = self.Time_duration
@@ -99,14 +100,14 @@ def Evolve_dynamics(self):
 
         # Evolve wave function. simple SUR algorithm: https://doi.org/10.1016/0009-2614(94)01474-A
         # real_part = real_part + H * dt * imag_part
-        real_part_change = self.full_H.mat * imag_part[self.full_H.icol] * time_step
+        real_part_change = self.full_H.mat_array * imag_part[self.full_H.icol_array] * time_step
         # use numba to speed up H = H + H_change. For numba, see : https://numba.pydata.org/
-        real_part = wave_func_sum(real_part, real_part_change, self.full_H.irow)
+        real_part = wave_func_sum(real_part, real_part_change, self.full_H.irow_array)
 
         # imag_part = imag_part - H * dt * real_part
-        imag_part_change = -self.full_H.mat * real_part[self.full_H.icol] * time_step
+        imag_part_change = -self.full_H.mat_array * real_part[self.full_H.icol_array] * time_step
         # use numba to speed up
-        imag_part = wave_func_sum(imag_part, imag_part_change, self.full_H.irow)
+        imag_part = wave_func_sum(imag_part, imag_part_change, self.full_H.irow_array )
 
         t = t + time_step
 
@@ -120,26 +121,24 @@ def Evolve_dynamics(self):
 
     return photon_energy_list, d1_energy_list, d2_energy_list, Time_list
 
-
 # ---------- evaluate photon , d1, d2 energy --------------
 def __evaluate_photon_energy(self):
     # use self.mat_photon and self.photon_H.irow. self.photon_H.icol
-    H_phi = self.photon_H.mat * self.wave_function[self.photon_H.icol]
+    H_phi = self.photon_H.mat_array * self.wave_function[self.photon_H.icol_array]
 
     H_phi_wave_function = np.zeros(self.state_num, dtype=np.complex)
-    H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, self.photon_H.irow)
+    H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, self.photon_H.irow_array)
 
     photon_energy = np.sum(np.real(np.conjugate(self.wave_function) * H_phi_wave_function))
 
     return photon_energy
 
-
 def __evaluate_d_energy(self , d_H ):
     # H * |\psi>
-    H_phi = d_H.mat * self.wave_function[d_H.icol]
+    H_phi = d_H.mat_array * self.wave_function[d_H.icol_array]
 
     H_phi_wave_function = np.zeros(self.state_num, dtype=np.complex)
-    H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, d_H.irow)
+    H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, d_H.irow_array)
 
     d_energy = np.sum(np.real(np.conjugate(self.wave_function) * H_phi_wave_function))
 

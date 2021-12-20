@@ -1,4 +1,9 @@
 import numpy as np
+'''
+part II of constructing Hamiltonian
+We do the following : 1. revert Hamiltonian to diagonal form
+                      2. read off-diagonal coupling strength from Genetic algorithm and add in Hamiltonian
+'''
 
 def construct_full_system_Hamiltonian_part2(self, offdiagonal_coupling_list):
     '''
@@ -19,8 +24,6 @@ def construct_full_system_Hamiltonian_part2(self, offdiagonal_coupling_list):
     # full system construct Hamiltonian using detector's Hamiltonian & coupling between p-d and d-d
     self.__construct_full_system_offdiag_coupling()
 
-    # shift Hamiltonian
-    self.__Shift_Hamiltonian()
 
 
 def __reverse_mat_diag_form(self):
@@ -70,16 +73,11 @@ def __construct_full_system_offdiag_coupling(self):
 
     # coupling in detector 1
     intra_d1_coupling_num = len(self.d1_coupling_H.irow)
-    construct_intra_d_coup(intra_d1_coupling_num, self.d1_coupling_dmat_index, self.detector1.dmat, self.d1_H)
+    construct_intra_d_coup(intra_d1_coupling_num, self.d1_coupling_dmat_index, self.detector1.d_H.mat, self.d1_H)
 
     # coupling in detector2
     intra_d2_coupling_num = len(self.d2_coupling_H.irow)
-    construct_intra_d_coup(intra_d2_coupling_num, self.d2_coupling_dmat_index, self.detector2.dmat, self.d2_H)
+    construct_intra_d_coup(intra_d2_coupling_num, self.d2_coupling_dmat_index, self.detector2.d_H.dmat, self.d2_H)
 
 
-def __Shift_Hamiltonian(self):
-    '''
-    shift Hamiltonian by energy : <\psi | H | \psi>
-    '''
-    for i in range(self.state_num):
-        self.full_H.mat[i] = self.full_H.mat[i] - self.initial_energy
+

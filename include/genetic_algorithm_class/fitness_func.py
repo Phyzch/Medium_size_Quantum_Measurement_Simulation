@@ -23,3 +23,4 @@ def calculate_population_fitness(self):
                 # already computed in the history. Record its value
                 index = self.Biglist_genes.index(individual.genes)
                 individual.fitness = self.Biglist_fitness[index]
+

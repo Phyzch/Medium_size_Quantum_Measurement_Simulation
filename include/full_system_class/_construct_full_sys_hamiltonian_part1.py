@@ -2,8 +2,13 @@ import numpy as np
 from include.detector_class.Detector_class import detector
 from include.Constructing_state_module import binary_search_mode_list
 
-
-# ----------------   first part of construcing Hamiltonian. This only have to be called once. --------------------------------
+'''
+first part of construcing Hamiltonian. This only have to be called once.
+We do following : 1. compute energy of full_system  : self.__compute_initial_energy()
+                  2. let detector construct Hamiltonian and coupling info: self.detector1/2.construct_detector_Hamiltonian_part1()
+                  3. construct diagonal part of Hamiltonian and state for full_system : self.__construct_full_system_diagonal_Hamiltonian()
+                  4. construct irow, icol for off-diagonal coupling between state : self.__construct_offdiag_dd_pd_coup() , self.__construct_intra_detector_coupling()
+'''
 
 def construct_full_system_Hamiltonian_part1(self):
     self.__compute_initial_energy()
@@ -17,7 +22,7 @@ def construct_full_system_Hamiltonian_part1(self):
     self.__construct_offdiag_dd_pd_coup()
 
     # compute position of intra-detector coupling
-    self.__compute_position_of_intra_detector_coupling()
+    self.__construct_intra_detector_coupling()
 
 
 def __compute_initial_energy(self):
@@ -38,8 +43,8 @@ def __construct_full_system_diagonal_Hamiltonian(self):
     for i in range(self.photon_state_num):
         for j in range(self.detector1.state_num):
             for k in range(self.detector2.state_num):
-                energy = self.photon_state_energy[i] + self.detector1.State_energy_list[j] + \
-                         self.detector2.State_energy_list[k]
+                energy = self.photon_state_energy[i] + self.detector1.state_energy_list[j] + \
+                         self.detector2.state_energy_list[k]
 
                 if (abs(energy - self.initial_energy) <= self.energy_window):
                     self.sstate.append(i)
@@ -55,20 +60,29 @@ def __construct_full_system_diagonal_Hamiltonian(self):
 
                     # Hamiltonian for photon, d1, d2
                     self.photon_H.append(self.photon_state_energy[i], self.state_num, self.state_num)
-                    self.d1_H.append(self.detector1.State_energy_list[j], self.state_num, self.state_num)
-                    self.d2_H.append(self.detector2.State_energy_list[k], self.state_num, self.state_num)
+                    self.d1_H.append(self.detector1.state_energy_list[j], self.state_num, self.state_num)
+                    self.d2_H.append(self.detector2.state_energy_list[k], self.state_num, self.state_num)
 
                     self.state_num = self.state_num + 1
+
+    # shift Hamiltonian's diag part by initial energy to speed up propagation of wave function.
+    self.__Shift_Hamiltonian()
 
     # diagonal part of Hamiltonian. No coupling.
     self.full_H.diag_mat = self.full_H.mat.copy()
     self.d1_H.diag_mat = self.d1_H.mat.copy()
     self.d2_H.diag_mat = self.d2_H.mat.copy()
 
+def __Shift_Hamiltonian(self):
+    '''
+    shift Hamiltonian by energy : <\psi | H | \psi>
+    '''
+    for i in range(self.state_num):
+        self.full_H.mat[i] = self.full_H.mat[i] - self.initial_energy
 
-def __compute_position_of_intra_detector_coupling(self):
+def __construct_intra_detector_coupling(self):
     # -------------- inline function -------
-    def construct_intra_d_coupling(i, j, di, dj, dstate_num, dmat_num, dirow, dicol,
+    def construct_intra_d_coupling_submodule (i, j, di, dj, dstate_num, dmat_num, dirow, dicol,
                                    d_coupling_H, d_coupling_dmat_index,
                                    dmat_H):
         '''
@@ -113,15 +127,15 @@ def __compute_position_of_intra_detector_coupling(self):
 
             # coupling in detector2
             if (ss == 0 and di1 == dj1 and di2 != dj2):
-                construct_intra_d_coupling(i, j, di2, dj2, self.detector2.state_num, self.detector2.dmatnum,
-                                           self.detector2.dirow, self.detector2.dicol, self.d2_coupling_H,
+                construct_intra_d_coupling_submodule(i, j, di2, dj2, self.detector2.state_num, self.detector2.dmatnum,
+                                           self.detector2.d_H.irow, self.detector2.d_H.icol, self.d2_coupling_H,
                                            self.d2_coupling_dmat_index,
                                            self.d2_H)
 
             # coupling in detector 1
             elif (ss == 0 and di1 != dj1 and di2 == dj2):
-                construct_intra_d_coupling(i, j, di1, dj1, self.detector1.state_num, self.detector1.dmatnum,
-                                           self.detector1.dirow, self.detector1.dicol, self.d1_coupling_H,
+                construct_intra_d_coupling_submodule(i, j, di1, dj1, self.detector1.state_num, self.detector1.dmatnum,
+                                           self.detector1.d_H.irow, self.detector1.d_H.icol, self.d1_coupling_H,
                                            self.d1_coupling_dmat_index,
                                            self.d1_H)
 

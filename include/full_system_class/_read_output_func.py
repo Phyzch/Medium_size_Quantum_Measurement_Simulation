@@ -1,5 +1,6 @@
 import numpy as np
 import os
+
 # ------------ read & output function ---------------------------------------
 # -------------------------- Read off-diag parameter num  ---------------------
 def read_offdiag_coupling_element(self, offdiagonal_coupling_list):
@@ -47,8 +48,8 @@ def output_off_diagonal_coupling_mode_info(self):
 
         Coupling_mode_list.append(coupling_mode)
 
-    Len = len(Coupling_mode_list)
-    print("Coupling number:  "  +str(Len))
+    list_len = len(Coupling_mode_list)
+    print("Coupling number:  "  + str(list_len) + "\n")
     print("Coupling for state in full system: ")
-    for i in range(Len):
+    for i in range(list_len):
         print(Coupling_mode_list[i])

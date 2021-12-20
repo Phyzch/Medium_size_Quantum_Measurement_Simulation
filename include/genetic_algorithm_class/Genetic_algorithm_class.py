@@ -3,19 +3,20 @@ from include.util import *
 
 
 
-
-
 # Need to specify fitness function for Genetic algorithm module
 # ga.fitness_function = customized_fitness_function.  Fitnessfunction should have form : function(genes, seed_param) . Here seed_param is parameters we feed in.
 # You have to define your own create_individual and crossover function.
 # This is continuous genetic algorithm, which means paramter to be optimized is continuous. See: Section 3 of Practical Genetic algorithms (Second Edition) -- Randy L. Haupt, Sue Ellen Haupt.
 # class below inherit from pyeasyga class : see https://pypi.org/project/pyeasyga/
+
+
 class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
 
     # import method.
-    from immigrate import immigrate_population , shuffle_genetic_data
-    from mutate_crossover import mutate_function, crossover_function
-    from create_generation import create_first_generation , create_next_generation, create_initial_population , create_new_population, create_individual_gene
+    from create_generation import create_first_generation, create_next_generation, create_initial_population, \
+        create_new_population, create_individual_gene
+    from immigrate import immigrate_population, shuffle_genetic_data
+    from mutate_crossover import  mutate_function, crossover_function
     from fitness_func import calculate_population_fitness
 
     def __init__(self,

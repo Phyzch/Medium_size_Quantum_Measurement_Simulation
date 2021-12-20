@@ -25,3 +25,4 @@ def mutate_function(self, gene):
     rn = random.random()
     mutate_index = random.randrange(self.param_number)
     gene[mutate_index] = rn * self.param_range
+

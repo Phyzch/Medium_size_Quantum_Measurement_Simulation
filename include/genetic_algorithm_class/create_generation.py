@@ -85,3 +85,4 @@ def create_new_population(self):
 
 def create_individual_gene(self):
     return [np.random.random(self.param_number) * self.param_range]
+
