@@ -203,7 +203,7 @@ class detector():
         # calculate state's offdiagonal coupling
         self.calculate_offdiag_coupling_num()
 
-    def construct_detector_Hamiltonian_part2(self , offdiag_coupling_element_list):
+    def construct_offdiag_mat(self, offdiag_coupling_element_list):
         '''
         Now we get off-diagonal-coupling_list_element. Continue our way of constructing Hamiltonian
         :return:
@@ -216,18 +216,19 @@ class detector():
             raise NameError('offdiagonal coupling element input from Genetic_algorithm does not have right length')
 
         # dirow, dicol is already add in list in calculate_offdiag_coupling_num(self)
-        for coupling_index in range(self.offdiag_coupling_num):
-            self.dmat.append(self.offdiag_coupling_element_list[coupling_index])
+        self.dmat = self.dmat + self.offdiag_coupling_element_list
 
     def initialize_wave_function(self):
-        position, exist = binary_search_mode_list(self.state_mode_list, self.initial_state)
+        init_state_pos, exist = binary_search_mode_list(self.state_mode_list, self.initial_state)
         if(exist == False):
             raise NameError("Wrong . Initial state not in state space")
 
         self.wave_function = np.zeros(self.state_num , dtype = np.complex)
-        self.wave_function[position] = 1
+        self.wave_function[init_state_pos] = 1
 
-    def Reverse_dmat(self):
+        return init_state_pos
+
+    def reverse_dmat_diag_form(self):
         # when we use new coupling coefficient in Genetic algorithm, we have to reverse detector matrix back to original form.
         self.dmat = self.dmat_diagonal.copy()
 

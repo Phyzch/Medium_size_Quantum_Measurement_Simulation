@@ -112,7 +112,7 @@ class full_system():
         # off diagonal parameter : 1. parameter for intra-detector coupling  2. coupling between detectors.
         self.offdiag_param_list = []
         # offdiagonal parameter : 1. between system and detector and 2.between detector and detector.
-        self.offdiag_param_list_inter = []
+        self.pd_dd_offdiag_param = []
 
         # full_H : full_Hamiltonian for (photon + detector)
         self.full_H = Hamiltonian()
@@ -209,7 +209,7 @@ class full_system():
 
     def __compute_position_of_intra_detector_coupling(self):
 
-# -------------- inline function -------
+        # -------------- inline function -------
         def construct_intra_d_coupling( i, j,  di, dj , dstate_num , dmat_num , dirow, dicol,
                                        d_coupling_H, d_coupling_dmat_index,
                                        dmat_H):
@@ -240,7 +240,7 @@ class full_system():
                     dmat_H.irow.append(j)
                     dmat_H.icol.append(i)
                     break
-# --------------- inline function -------------------------------------
+         # --------------- inline function -------------------------------------
 
         for i in range(self.state_num):
             for j in range(i + 1, self.state_num):
@@ -391,93 +391,7 @@ class full_system():
 
 #  --------------------------------------- first part of construcing Hamiltonian.  End ---------------------
 
-
  # -------------------------- Read and output offdiagonal parameter number . Also reverse matrix begin ---------------------
-    def print_state_mode(self):
-        # output function.
-        print(self.state_mode_list)
-        
-    def output_offdiagonal_parameter_number(self):
-        # we need to output offdiagonal parameter number to tell Genetic algorithm how many parameters we need to sample
-        return self.offdiag_param_num
-
-    def read_offdiag_coupling_element(self,offdiagonal_coupling_list):
-        self.offdiag_param_list = offdiagonal_coupling_list.copy()
-
-        begin_index = 0
-        end_index = self.detector1.offdiag_coupling_num
-        off_diagonal_parameter_for_detector1 = offdiagonal_coupling_list [ begin_index: end_index].copy()
-
-        begin_index = begin_index + self.detector1.offdiag_coupling_num
-        end_index = end_index + self.detector2.offdiag_coupling_num
-        off_diagonal_parameter_for_detector2 = offdiagonal_coupling_list [ begin_index : end_index ].copy()
-
-        begin_index = begin_index + self.detector2.offdiag_coupling_num
-        end_index = self.offdiag_param_num
-        self.offdiag_param_list_inter = offdiagonal_coupling_list[begin_index: end_index].copy()
-
-        # each detector construct their hamiltonian
-        self.detector1.construct_detector_Hamiltonian_part2( off_diagonal_parameter_for_detector1 )
-        self.detector2.construct_detector_Hamiltonian_part2( off_diagonal_parameter_for_detector2 )
-
-    def Reverse_mat(self):
-        # For each generation, we only have to update off-diagonal part .
-        self.detector1.Reverse_dmat()
-        self.detector2.Reverse_dmat()
-
-        self.full_H.mat = self.full_H.diag_mat.copy()
-
-        self.d1_H.mat = self.d1_H.diag_mat.copy()
-        self.d2_H.mat = self.d2_H.diag_mat.copy()
-
-
-    # -------------------------- Read and output offdiagonal parameter number . Also reverse matrix  End---------------------
-
-    def construct_full_system_offdiag_coupling(self):
-
-        inter_detector_coupling_num = len(self.pd_dd_coupling_irow)
-        if(inter_detector_coupling_num != len(self.offdiag_param_list_inter)):
-            raise NameError("inter detector coupling number does not equal to parameter number read from Genetic algorithm")
-
-        # coupling between detector and system. and detector between detector
-        for i in range(inter_detector_coupling_num):
-            self.full_H.mat.append(self.offdiag_param_list_inter[i])
-
-            self.full_H.mat.append(self.offdiag_param_list_inter[i])
-
-        # coupling in detector 1
-        intra_detector1_coupling_num = len(self.d1_coupling_H.irow)
-        for i in range(intra_detector1_coupling_num):
-            k = self.d1_coupling_dmat_index[i]
-
-            self.full_H.mat.append(self.detector1.dmat[ k])
-
-            # we also record lower trangular part
-            self.full_H.mat.append(self.detector1.dmat[ k])
-
-
-            # We construct Hamiltonian for detector1
-            self.d1_H.mat.append(self.detector1.dmat[ k])
-            # also lower triangular part
-            self.d1_H.mat.append(self.detector1.dmat[ k])
-
-
-        # coupling in detector2
-        intra_detector2_coupling_num = len(self.d2_coupling_H.irow)
-        for i in range(intra_detector2_coupling_num):
-            k = self.d2_coupling_dmat_index[i]
-
-            self.full_H.mat.append(self.detector2.dmat[ k])
-
-            self.full_H.mat.append(self.detector2.dmat[ k])
-
-            # We construct Hamiltonian for detector2
-            self.d2_H.mat.append(self.detector2.dmat[ k])
-            # also lower triangular part
-            self.d2_H.mat.append(self.detector2.dmat[ k])
-
-
-
     def construct_full_system_Hamiltonian_part2(self , offdiagonal_coupling_list):
         '''
         After we read offdiagonal parameter from Genetic algorithm, we do this part.
@@ -485,76 +399,122 @@ class full_system():
         :return:
         '''
         # First reverse matrix to contain only diagonal part.
-        self.Reverse_mat()
+        self.__reverse_mat_diag_form()
 
         # Then read offdiagonal coupling parameter
-        self.read_offdiag_coupling_element(offdiagonal_coupling_list)
+        d1_offdiag_param , d2_offdiag_param = self.__read_offdiag_coupling_element(offdiagonal_coupling_list)
 
-        # full system construct Hamiltonian using detector's Hamiltonian.
-        self.construct_full_system_offdiag_coupling()
+        # each detector construct their hamiltonian
+        self.detector1.construct_offdiag_mat(d1_offdiag_param)
+        self.detector2.construct_offdiag_mat(d2_offdiag_param)
 
-        # initialize wave function.
-        self.initialize_wave_function()
+        # full system construct Hamiltonian using detector's Hamiltonian & coupling between p-d and d-d
+        self.__construct_full_system_offdiag_coupling()
 
         # shift Hamiltonian
-        self.Shift_Hamiltonian()
+        self.__Shift_Hamiltonian()
 
 
-    def initialize_wave_function(self):
-        self.detector1.initialize_wave_function()
-        self.detector2.initialize_wave_function()
+    def __reverse_mat_diag_form(self):
+        # For each generation, we only have to update off-diagonal part .
+        self.detector1.reverse_dmat_diag_form()
+        self.detector2.reverse_dmat_diag_form()
 
-        # position1 and position2 is postion in detector matrix.
-        position1, exist1 = binary_search_mode_list(self.detector1.state_mode_list, self.detector1.initial_state)
-        position2, exist2 = binary_search_mode_list(self.detector2.state_mode_list, self.detector2.initial_state)
+        self.full_H.mat = self.full_H.diag_mat.copy()
 
-        self.wave_function = np.zeros(self.state_num, dtype = np.complex)
+        self.d1_H.mat = self.d1_H.diag_mat.copy()
+        self.d2_H.mat = self.d2_H.diag_mat.copy()
 
-        for i in range(self.state_num):
-            if self.sstate[i] == 1  :
-                if self.dstate1[i] == position1 and self.dstate2[i] == position2 :
-                    self.wave_function[i] = self.initial_photon_wave_function[0]
+    def __read_offdiag_coupling_element(self, offdiagonal_coupling_list):
+        '''
 
-            if self.sstate[i] == 2 :
-                if self.dstate1[i] == position1 and self.dstate2[i] == position2 :
-                    self.wave_function[i] = self. initial_photon_wave_function[1]
+        :param offdiagonal_coupling_list: python list. off-diag coupling param.
+        :return:
+        '''
+        self.offdiag_param_list = offdiagonal_coupling_list.copy()
 
-    def Shift_Hamiltonian(self):
+        begin_index = 0
+        end_index = self.detector1.offdiag_coupling_num
+        d1_offdiag_param = offdiagonal_coupling_list [ begin_index: end_index].copy()
+
+        begin_index = end_index
+        end_index = end_index + self.detector2.offdiag_coupling_num
+        d2_offdiag_param = offdiagonal_coupling_list [ begin_index : end_index ].copy()
+
+        begin_index = end_index
+        end_index = self.offdiag_param_num
+        self.pd_dd_offdiag_param = offdiagonal_coupling_list[begin_index: end_index].copy()
+
+        return d1_offdiag_param, d2_offdiag_param
+
+
+    def __construct_full_system_offdiag_coupling(self):
+
+        # ---------- inline function ---------
+        def construct_intra_d_coup(intra_d_coup_num , dmat_index, dmat, d_H ):
+            '''
+
+            :param intra_d_coup_num: number of intra-detector coupling matrix element
+            :param dmat_index: index of element in detector's Hamiltonian
+            :param dmat: detector matrix
+            :param d_H: Hamiltonian solely for detector in full matrix
+            :return:
+            '''
+            for i in range(intra_d_coup_num):
+                k = dmat_index[i]
+                self.full_H.mat.append(dmat[k])
+                # we also record lower trangular part
+                self.full_H.mat.append(dmat[k])
+
+                # construct Hamiltonian for d_H
+                d_H.mat.append(dmat[k])
+                # we also record lower trangular part
+                d_H.mat.append(dmat[k])
+        # ---------- inline function ----------
+
+        pd_dd_coupling_num = len(self.pd_dd_coupling_irow)
+        if(pd_dd_coupling_num != len(self.pd_dd_offdiag_param)):
+            raise NameError("inter detector coupling number does not equal to parameter number read from Genetic algorithm")
+
+        # order of adding element below is the same we construct irow, icol.
+        # coupling between detector and photon (pd) . and detector between detector (dd)
+        for i in range(pd_dd_coupling_num):
+            self.full_H.mat.append(self.pd_dd_offdiag_param[i])
+            self.full_H.mat.append(self.pd_dd_offdiag_param[i])
+
+        # coupling in detector 1
+        intra_d1_coupling_num = len(self.d1_coupling_H.irow)
+        construct_intra_d_coup(intra_d1_coupling_num, self.d1_coupling_dmat_index, self.detector1.dmat, self.d1_H)
+
+        # coupling in detector2
+        intra_d2_coupling_num = len(self.d2_coupling_H.irow)
+        construct_intra_d_coup(intra_d2_coupling_num , self.d2_coupling_dmat_index, self.detector2.dmat, self.d2_H)
+
+    def __Shift_Hamiltonian(self):
+        '''
+        shift Hamiltonian by energy : <\psi | H | \psi>
+        '''
         for i in range(self.state_num):
             self.full_H.mat[i] = self.full_H.mat[i] - self.initial_energy
 
+    # ----------- initialize wave function -----------------------------
+    def initialize_wave_function(self):
+        # initialize wave_func for d1, d2
+        # assume initially d1, d2 in pure state.
+        # position1 and position2 is postion of initial detector state in detector wave function.
+        position1 = self.detector1.initialize_wave_function()
+        position2 = self.detector2.initialize_wave_function()
 
-    def Evaluate_photon_energy(self):
-        # use self.mat_photon and self.photon_H.irow. self.photon_H.icol
-        H_phi = self.photon_H.mat * self.wave_function[self.photon_H.icol]
+        self.wave_function = np.zeros(self.state_num, dtype=np.complex)
 
-        H_phi_wave_function = np.zeros(self.state_num,dtype=np.complex)
-        H_phi_wave_function = wave_func_sum(H_phi_wave_function,H_phi, self.photon_H.irow)
+        for i in range(self.state_num):
+            if self.dstate1[i] == position1 and self.dstate2[i] == position2:
+                if self.sstate[i] == 1:
+                    self.wave_function[i] = self.initial_photon_wave_function[0]
+                if self.sstate[i] == 2:
+                    self.wave_function[i] = self.initial_photon_wave_function[1]
 
-        photon_energy = np.sum (np.real(np.conjugate(self.wave_function) * H_phi_wave_function) )
-
-        return photon_energy
-
-    def Evaluate_detector1_energy(self):
-        H_phi = self.d1_H.mat * self.wave_function[self.d1_H.icol]
-
-        H_phi_wave_function = np.zeros(self.state_num,dtype=np.complex)
-        H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, self.d1_H.irow)
-
-        detector1_energy = np.sum( np.real( np.conjugate(self.wave_function) * H_phi_wave_function ))
-
-        return detector1_energy
-
-    def Evaluate_detector2_energy(self):
-        H_phi = self.d2_H.mat * self.wave_function[self.d2_H.icol]
-
-        H_phi_wave_function = np.zeros(self.state_num,dtype=np.complex)
-        H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, self.d2_H.irow)
-
-        detector2_energy = np.sum(np.real(np.conjugate(self.wave_function) * H_phi_wave_function))
-
-        return detector2_energy
-
+    # ----------- Evolve Schrodinger equation on basis set. -------------------------
     def Evolve_dynamics(self):
         Final_time = Shared_data.Time_duration
         output_time_step = Shared_data.output_time_step
@@ -598,14 +558,14 @@ class full_system():
             if(step % output_step_number == 0 ):
                 self.wave_function = np.array([np.complex(Real_part[i] , Imag_part[i]) for i in range(self.state_num)])
                 # wave_function_list.append(self.wave_function)
-                photon_energy1 = self.Evaluate_photon_energy()
+                photon_energy1 = self.__evaluate_photon_energy()
 
                 if(step == 0 and abs(photon_energy1 - self.photon_energy) > 0.1 ):
                     raise NameError("Error for photon energy convergence")
 
-                detector1_energy = self.Evaluate_detector1_energy()
+                detector1_energy = self.__evaluate_d1_energy()
 
-                detector2_energy = self.Evaluate_detector2_energy()
+                detector2_energy = self.__evaluate_d2_energy()
 
                 d1_energy_list.append(detector1_energy)
                 d2_energy_list.append(detector2_energy)
@@ -645,6 +605,47 @@ class full_system():
 
 
         return  photon_energy_list, d1_energy_list, d2_energy_list , Time_list
+
+    # ---------- evaluate photon , d1, d2 energy --------------
+    def __evaluate_photon_energy(self):
+        # use self.mat_photon and self.photon_H.irow. self.photon_H.icol
+        H_phi = self.photon_H.mat * self.wave_function[self.photon_H.icol]
+
+        H_phi_wave_function = np.zeros(self.state_num,dtype=np.complex)
+        H_phi_wave_function = wave_func_sum(H_phi_wave_function,H_phi, self.photon_H.irow)
+
+        photon_energy = np.sum (np.real(np.conjugate(self.wave_function) * H_phi_wave_function) )
+
+        return photon_energy
+
+    def __evaluate_d1_energy(self):
+        H_phi = self.d1_H.mat * self.wave_function[self.d1_H.icol]
+
+        H_phi_wave_function = np.zeros(self.state_num,dtype=np.complex)
+        H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, self.d1_H.irow)
+
+        detector1_energy = np.sum( np.real( np.conjugate(self.wave_function) * H_phi_wave_function ))
+
+        return detector1_energy
+
+    def __evaluate_d2_energy(self):
+        H_phi = self.d2_H.mat * self.wave_function[self.d2_H.icol]
+
+        H_phi_wave_function = np.zeros(self.state_num,dtype=np.complex)
+        H_phi_wave_function = wave_func_sum(H_phi_wave_function, H_phi, self.d2_H.irow)
+
+        detector2_energy = np.sum(np.real(np.conjugate(self.wave_function) * H_phi_wave_function))
+
+        return detector2_energy
+
+    # ------------ output function ---------------------------------------
+    def output_state_mode(self):
+        # output quantum num for state
+        print(self.state_mode_list)
+
+    def output_offdiagonal_parameter_number(self):
+        # we need to output offdiagonal parameter number to tell Genetic algorithm how many parameters we need to sample
+        return self.offdiag_param_num
 
     def output_off_diagonal_coupling_mode_info(self):
         Coupling_mode_list = []

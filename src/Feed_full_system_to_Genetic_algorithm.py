@@ -205,7 +205,7 @@ def Implement_genetic_algorithm(file_path):
 
     if(rank == 0):
     # print information about structure of system
-        full_system_instance.print_state_mode()
+        full_system_instance.output_state_mode()
         full_system_instance.detector1.output_detector_state_coupling()
         full_system_instance.output_off_diagonal_coupling_mode_info()
         print( "parameter number for detector1: "  + str(full_system_instance.detector1.offdiag_coupling_num) )

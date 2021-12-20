@@ -52,7 +52,7 @@ def Analyze_Born_rule(file_path):
 
     # print information about structure of system
     if(rank == 0):
-        full_system_instance.print_state_mode()
+        full_system_instance.output_state_mode()
         full_system_instance.detector1.output_detector_state_coupling()
         full_system_instance.output_off_diagonal_coupling_mode_info()
 
