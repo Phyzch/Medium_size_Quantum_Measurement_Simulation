@@ -11,21 +11,21 @@ We do following : 1. compute energy of full_system  : self.__compute_initial_ene
 '''
 
 def construct_full_system_Hamiltonian_part1(self):
-    self.__compute_initial_energy()
+    self._compute_initial_energy()
 
     self.detector1.construct_detector_Hamiltonian_part1()
     self.detector2.construct_detector_Hamiltonian_part1()
 
-    self.__construct_full_system_diagonal_Hamiltonian()
+    self._construct_full_system_diagonal_Hamiltonian()
 
     # compute  parameter number and irow, icol for coupling between 2 detector and coupling beteween photon and detector.
-    self.__construct_offdiag_dd_pd_coup()
+    self._construct_offdiag_dd_pd_coup()
 
     # compute position of intra-detector coupling
-    self.__construct_intra_detector_coupling()
+    self._construct_intra_detector_coupling()
 
 
-def __compute_initial_energy(self):
+def _compute_initial_energy(self):
     self.initial_energy = 0
     d1_energy = np.sum(np.array(self.detector1.frequency) * np.array(self.detector1.initial_state))
     d2_energy = np.sum(np.array(self.detector2.frequency) * np.array(self.detector2.initial_state))
@@ -33,7 +33,7 @@ def __compute_initial_energy(self):
     self.initial_energy = self.init_photon_energy + d1_energy + d2_energy
 
 
-def __construct_full_system_diagonal_Hamiltonian(self):
+def _construct_full_system_diagonal_Hamiltonian(self):
     '''
     construct state and diagonal part of Hamiltonian.
     impose energy window : states included should satisfy : |E - E_init | <= energy_window
@@ -66,21 +66,21 @@ def __construct_full_system_diagonal_Hamiltonian(self):
                     self.state_num = self.state_num + 1
 
     # shift Hamiltonian's diag part by initial energy to speed up propagation of wave function.
-    self.__Shift_Hamiltonian()
+    self._Shift_Hamiltonian()
 
     # diagonal part of Hamiltonian. No coupling.
     self.full_H.diag_mat = self.full_H.mat.copy()
     self.d1_H.diag_mat = self.d1_H.mat.copy()
     self.d2_H.diag_mat = self.d2_H.mat.copy()
 
-def __Shift_Hamiltonian(self):
+def _Shift_Hamiltonian(self):
     '''
     shift Hamiltonian by energy : <\psi | H | \psi>
     '''
     for i in range(self.state_num):
         self.full_H.mat[i] = self.full_H.mat[i] - self.initial_energy
 
-def __construct_intra_detector_coupling(self):
+def _construct_intra_detector_coupling(self):
     # -------------- inline function -------
     def construct_intra_d_coupling_submodule (i, j, di, dj, dstate_num, dmat_num, dirow, dicol,
                                    d_coupling_H, d_coupling_dmat_index,
@@ -141,11 +141,11 @@ def __construct_intra_detector_coupling(self):
 
     #  construct irow and icol. (Note for irow,icol. We add off diagonal part between detector in compute_full_system_offdiagonal_paramter_number())
     #  Then we add offdiagonal index within same detector below. Same order apply to part that reconstruct offdiagonal part of mat.
-    __insert_upper_lower_triangular_index(recv_H=self.full_H, input_H=self.d1_coupling_H)
-    __insert_upper_lower_triangular_index(recv_H=self.full_H, input_H=self.d2_coupling_H)
+    _insert_upper_lower_triangular_index(recv_H=self.full_H, input_H=self.d1_coupling_H)
+    _insert_upper_lower_triangular_index(recv_H=self.full_H, input_H=self.d2_coupling_H)
 
 
-def __construct_offdiag_dd_pd_coup(self):
+def _construct_offdiag_dd_pd_coup(self):
     '''
 
     :return:
@@ -263,7 +263,7 @@ def __construct_offdiag_dd_pd_coup(self):
             if (ss == 0 and di1 != dj1 and di2 != dj2):
                 dd_coupling_num = include_dd_coupling(di1, dj1, di2, dj2, dd_coupling_num)
 
-def __insert_upper_lower_triangular_index(recv_H, input_H):
+def _insert_upper_lower_triangular_index(recv_H, input_H):
     '''
 
     :param recv_H:  Hamiltonian to recv input_H 's irow, icol. irow, icol will duplicate element in input_H as upper and lower triangular matrix index

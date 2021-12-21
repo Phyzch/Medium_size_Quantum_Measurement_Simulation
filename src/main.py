@@ -17,15 +17,19 @@ rank = comm.Get_rank()
 num_proc = comm.Get_size()
 
 def main():
-    print_sys_path_info()
+    '''
+
+    :return:
+    '''
+    # print_sys_path_info()
 
     # file_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Genetic_algorithm/3_mode/"
     # Implement_genetic_algorithm(file_path)
 
     # Plot_simulation_result()
 
-    # Analyze_Born_rule_file_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Born_rule/try/"
-    # Analyze_Born_rule(Analyze_Born_rule_file_path)
+    Analyze_Born_rule_file_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Born_rule/try/"
+    Analyze_Born_rule(Analyze_Born_rule_file_path)
 
 def print_sys_path_info():
     print(sys.path)

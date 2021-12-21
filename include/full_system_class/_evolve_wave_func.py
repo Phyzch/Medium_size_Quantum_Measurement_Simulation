@@ -85,9 +85,9 @@ def Evolve_dynamics(self):
             self.wave_function = np.array([np.complex(real_part[i], imag_part[i]) for i in range(self.state_num)])
 
             # wave_function_list.append(self.wave_function)
-            photon_energy = self.__evaluate_photon_energy()
-            d1_energy = self.__evaluate_d_energy(self.d1_H)
-            d2_energy = self.__evaluate_d_energy(self.d2_H)
+            photon_energy = self._evaluate_photon_energy()
+            d1_energy = self._evaluate_d_energy(self.d1_H)
+            d2_energy = self._evaluate_d_energy(self.d2_H)
 
             photon_energy_list.append(photon_energy)
             d1_energy_list.append(d1_energy)
@@ -122,7 +122,7 @@ def Evolve_dynamics(self):
     return photon_energy_list, d1_energy_list, d2_energy_list, Time_list
 
 # ---------- evaluate photon , d1, d2 energy --------------
-def __evaluate_photon_energy(self):
+def _evaluate_photon_energy(self):
     # use self.mat_photon and self.photon_H.irow. self.photon_H.icol
     H_phi = self.photon_H.mat_array * self.wave_function[self.photon_H.icol_array]
 
@@ -133,7 +133,7 @@ def __evaluate_photon_energy(self):
 
     return photon_energy
 
-def __evaluate_d_energy(self , d_H ):
+def _evaluate_d_energy(self, d_H):
     # H * |\psi>
     H_phi = d_H.mat_array * self.wave_function[d_H.icol_array]
 

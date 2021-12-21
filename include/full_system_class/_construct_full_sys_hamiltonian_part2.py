@@ -12,7 +12,7 @@ def construct_full_system_Hamiltonian_part2(self, offdiagonal_coupling_list):
     :return:
     '''
     # First reverse matrix to contain only diagonal part.
-    self.__reverse_mat_diag_form()
+    self._reverse_mat_diag_form()
 
     # Then read offdiagonal coupling parameter
     d1_offdiag_param, d2_offdiag_param = self.__read_offdiag_coupling_element(offdiagonal_coupling_list)
@@ -22,11 +22,11 @@ def construct_full_system_Hamiltonian_part2(self, offdiagonal_coupling_list):
     self.detector2.construct_offdiag_mat(d2_offdiag_param)
 
     # full system construct Hamiltonian using detector's Hamiltonian & coupling between p-d and d-d
-    self.__construct_full_system_offdiag_coupling()
+    self._construct_full_system_offdiag_coupling()
 
 
 
-def __reverse_mat_diag_form(self):
+def _reverse_mat_diag_form(self):
     # For each generation, we only have to update off-diagonal part .
     self.detector1.reverse_dmat_diag_form()
     self.detector2.reverse_dmat_diag_form()
@@ -37,7 +37,7 @@ def __reverse_mat_diag_form(self):
     self.d2_H.mat = self.d2_H.diag_mat.copy()
 
 
-def __construct_full_system_offdiag_coupling(self):
+def _construct_full_system_offdiag_coupling(self):
     # ---------- inline function ---------
     def construct_intra_d_coup(intra_d_coup_num, dmat_index, dmat, d_H):
         '''
