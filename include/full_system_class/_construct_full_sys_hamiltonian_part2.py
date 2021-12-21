@@ -15,7 +15,7 @@ def construct_full_system_Hamiltonian_part2(self, offdiagonal_coupling_list):
     self._reverse_mat_diag_form()
 
     # Then read offdiagonal coupling parameter
-    d1_offdiag_param, d2_offdiag_param = self.__read_offdiag_coupling_element(offdiagonal_coupling_list)
+    d1_offdiag_param, d2_offdiag_param = self.read_offdiag_coupling_element(offdiagonal_coupling_list)
 
     # each detector construct their hamiltonian
     self.detector1.construct_offdiag_mat(d1_offdiag_param)

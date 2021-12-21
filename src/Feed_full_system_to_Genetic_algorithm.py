@@ -91,7 +91,8 @@ def set_detector_param():
     initial_d_state1 = [0, 0, 0]
     # energy window for detector to include state around init state.
     d1_energy_window = 1
-    # state couple to each other in detector should satisfy \Delta E <= state_coupling_energy_window
+    # state couple to each other in detector should satisfy \Delta E <= state_coupling_energy_window.
+    # set it == 0 means only resonant state can couple to each other.
     d1_state_coupling_energy_window = 0
 
     # -------------- parameter for d2 ----------------

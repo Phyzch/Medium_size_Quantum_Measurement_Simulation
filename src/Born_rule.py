@@ -20,14 +20,16 @@ def set_detector_param():
     nmax1 = [1, 2, 4]
     initial_d_state1 = [0, 0, 0]
     d1_energy_window = 1
+    d1_state_coupling_energy_window = 0
 
     frequency2 = np.array([1, 0.5, 0.25])
     nmax2 = [1, 2, 4]
     initial_d_state2 = [0, 0, 0]
     d2_energy_window = 1
+    d2_state_coupling_energy_window = 0
 
-    Detector_1_parameter = dof, frequency1, nmax1, initial_d_state1, d1_energy_window
-    Detector_2_parameter = dof, frequency2, nmax2, initial_d_state2, d2_energy_window
+    Detector_1_parameter = dof, frequency1, nmax1, initial_d_state1, d1_energy_window , d1_state_coupling_energy_window
+    Detector_2_parameter = dof, frequency2, nmax2, initial_d_state2, d2_energy_window , d2_state_coupling_energy_window
 
     return Detector_1_parameter , Detector_2_parameter
 
@@ -75,7 +77,8 @@ def Analyze_Born_rule(file_path):
 
     for i in range(iteration_number_per_core):
         # randomly generate parameter according to coupling_parameter_range:
-        coupling_param = np.random.normal(0, coupling_parameter_range, parameter_number)
+        coupling_param = np.random.normal(0, coupling_parameter_range, parameter_number).tolist()
+        assert(type(coupling_param) == list )
 
         photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_energy_flow(full_system_instance, coupling_param)
 

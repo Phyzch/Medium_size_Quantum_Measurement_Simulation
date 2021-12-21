@@ -1,20 +1,22 @@
 import numpy as np
 
 class Hamiltonian():
-    # a primitive class for Hamiltonian:
-    # irow : row index for Hamiltonian
-    irow = []
-    # icol: column index for Hamiltonian
-    icol = []
-    # mat: matrix value for Hamiltonian.
-    mat = []
 
-    mat_array = np.zeros(1)
-    irow_array = np.zeros(1)
-    icol_array = np.zeros(1)
+    def __init__(self):
+        # a primitive class for Hamiltonian:
+        # irow : row index for Hamiltonian
+        self.irow = []
+        # icol: column index for Hamiltonian
+        self.icol = []
+        # mat: matrix value for Hamiltonian.
+        self.mat = []
 
-    # diag_mat : diagonal part of matrix
-    diag_mat = []
+        self.mat_array = np.zeros(1)
+        self.irow_array = np.zeros(1)
+        self.icol_array = np.zeros(1)
+
+        # diag_mat : diagonal part of matrix
+        self.diag_mat = []
 
     def append( self, mat_element, irow_index, icol_index):
         assert( type(self.mat) == list and type(self.irow) == list and type(self.icol) == list )

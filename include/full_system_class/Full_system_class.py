@@ -36,8 +36,8 @@ class full_system():
         # energy window for full matrix is passed through parameter directly here.
 
         # we have three energy windows. energy_window for each detector is contained in detector_parameter.
-        self.detector1 = detector(Detector_1_parameter)
-        self.detector2 = detector(Detector_2_parameter )
+        self.detector1 = detector( *Detector_1_parameter)
+        self.detector2 = detector( *Detector_2_parameter )
 
         # initial wave function for photon
         self.initial_photon_wave_function = initial_photon_wave_function
