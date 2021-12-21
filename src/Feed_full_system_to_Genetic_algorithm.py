@@ -14,134 +14,8 @@ num_proc = comm.Get_size()
 import os
 
 
-def plot_simulation_result( *args ):
-    photon_energy_list, d1_energy_list_change, d2_energy_list_change ,Time_list , file_path = args
-    # configure fig, ax
-    fig1, ax1 = plt.subplots(nrows=1, ncols=1)
-    ax1.plot(Time_list, d1_energy_list_change, label='left photon localization')
-    ax1.plot(Time_list, d2_energy_list_change, label='right photon localization')
-    ax1.plot(Time_list, photon_energy_list, label='photon energy')
-
-    ax1.set_xlabel('time')
-    ax1.set_ylabel('E')
-
-    ax1.legend(loc='best')
-
-    # save figure.
-    fig_name = "best_simulation_result.png"
-    fig_name = os.path.join(file_path, fig_name)
-
-    fig1.savefig(fig_name)
-
-def write_data(f, data_list , symbol):
-    f.write(symbol + "\n")
-    for data in data_list:
-        f.write(str(  round(data,4) ) + " ")
-    f.write("\n")
-
-def save_simulation_result(*args):
-    best_param , best_fitness, parameter_number, parameter_range, Time_list, \
-    analyze_result,\
-    d1_energy_list_change , d2_energy_list_change , photon_energy_list , file_path = args
-
-    first_peak_time_duration_ratio_best_param, max_energy_change_best_param, localization_duration_ratio_best_param , _ = analyze_result
-
-    # save best simulation result found
-    filename1 = 'best_parameter_and_fitness_function.txt'
-    filename1 = os.path.join(file_path, filename1)
-    with open(filename1, 'w') as f1:
-
-        # record parameter we fit.
-        for num in best_param:
-            f1.write(str(num) + " , ")
-        f1.write('\n')
-
-        # compute geometric mean and write to output file.
-        normalized_geometric_mean = compute_coupling_geometric_mean(best_param, parameter_number, parameter_range)
-
-        f1.write('geometric mean : \n')
-        f1.write(str(normalized_geometric_mean) + " \n")
-
-        f1.write('best fitness ' + "\n")
-        f1.write(str(best_fitness) + '\n')
-
-        # fit function
-        best_fitness_by_fitting, max_energy_fitness_contribution, localization_duration_ratio_contribution, first_peak_duration_contribution = fit_func1(
-            first_peak_time_duration_ratio_best_param,
-            max_energy_change_best_param,
-            localization_duration_ratio_best_param,
-            normalized_geometric_mean)
-
-        # assert the fitness function we get is correct.
-        fitness_func_diff = np.abs(best_fitness - best_fitness_by_fitting)/np.abs(best_fitness)
-        assert( fitness_func_diff < 0.05 )
-
-        f1.write(
-            "contribution from  1. Max energy  2. localization duration ratio  3. first peak duartion_ratio:   " + "\n")
-        f1.write(str(max_energy_fitness_contribution) + "  ,  " + str(
-            localization_duration_ratio_contribution) + "  , " + str(first_peak_duration_contribution) + "\n")
-
-        f1.write('first_peak_Time_duration_ratio, max_energy_change, localization_duration ' + "\n")
-
-        f1.write(str(first_peak_time_duration_ratio_best_param) + "  " + str(max_energy_change_best_param) + "  " + str(
-            localization_duration_ratio_best_param) + "\n")
-
-
-        # record : time, el, er, energy.
-        write_data(f1, Time_list , 'Time: ')
-        write_data(f1, d1_energy_list_change , "el:  ")
-        write_data(f1, d2_energy_list_change , "er:  ")
-        write_data(f1, photon_energy_list , "e_photon:  ")
-
-def Evaluate_simulation_result( *args ):
-    ga, full_system_instance , file_path , population_size, coupling_strength , parameter_number, highest_peak_bool = args
-
-    # ------------------  Evaluate result of Genetic algorithm ----------------------
-
-    # output last generations and their fitfunction.
-    last_generation = ga.last_generation()
-    # (member.fitness, member.genes)
-    last_generation_fitness_func = [member[0] for member in last_generation]
-    last_generation_param = [member[1] for member in last_generation]
-
-    # Broadcast fitness function and paramter to all process
-    parameter_for_all = Broadcast_data(last_generation_param , num_proc )
-    fitness_for_all = Broadcast_data( np.real(last_generation_fitness_func) , num_proc )
-
-
-    if rank == 0:
-
-        print('num of proc: ' + str(num_proc))
-        print('population size: ' + str(population_size))
-
-        best_gene_index = np.argmax(fitness_for_all)
-        best_fitness = fitness_for_all[best_gene_index]
-        best_param = parameter_for_all[best_gene_index]
-
-        # Sort parameter set according to their fitness function.
-        sort_index = np.argsort(-fitness_for_all)
-        parameter_for_all = parameter_for_all[sort_index]
-        fitness_for_all = fitness_for_all[sort_index]
-
-        # plot best parameter simulation result
-        photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_energy_flow(
-            full_system_instance, best_param)
-
-        # plot simulation result
-        plot_simulation_result( photon_energy_list, d1_energy_list_change, d2_energy_list_change , time_list , file_path )
-
-        # analyze result
-        analyze_result = \
-            Analyze_peak_and_peak_duration( d1_energy_list_change, d2_energy_list_change, time_list , highest_peak_bool= highest_peak_bool)
-
-        # Now you have to save result to files:
-        save_simulation_result(  best_param , best_fitness, parameter_number, coupling_strength, time_list,
-            analyze_result,
-            d1_energy_list_change , d2_energy_list_change , photon_energy_list , file_path)
-
-
 def Implement_genetic_algorithm(file_path):
-    coupling_strength = 0.01
+    coupling_parameter_range = 0.01
     highest_peak_bool = True
 
     # --------------- parameter for photon ------------
@@ -184,7 +58,7 @@ def Implement_genetic_algorithm(file_path):
     parameter_number = full_system_instance.output_offdiagonal_parameter_number()
 
     # Prepare parameter for genetic algorithm
-    param = [coupling_strength , full_system_instance, parameter_number , highest_peak_bool]
+    param = [coupling_parameter_range , full_system_instance, parameter_number , highest_peak_bool]
 
     # --------------------------------- End  prepare variable for Genetic algorithm simulation -------------------
 
@@ -205,8 +79,7 @@ def Implement_genetic_algorithm(file_path):
         f2.close()
 
     # Evaluate simulation result.
-    Evaluate_simulation_result(ga, full_system_instance , file_path , population_size, coupling_strength , parameter_number , highest_peak_bool)
-
+    Evaluate_simulation_result(ga, full_system_instance , file_path , population_size, coupling_parameter_range , parameter_number , highest_peak_bool)
 
 def set_detector_param():
     # ----------- parameter for detector ---------------------------
@@ -257,6 +130,129 @@ def genetic_algorithm_info(file_path, population_size, population_size_over_all_
         f2.write('number of process:  ' + str(num_proc) + '\n')
 
     return f2
+
+def Evaluate_simulation_result( *args ):
+    ga, full_system_instance , file_path , population_size, coupling_strength , parameter_number, highest_peak_bool = args
+
+    # ------------------  Evaluate result of Genetic algorithm ----------------------
+
+    # output last generations and their fitfunction.
+    last_generation = ga.last_generation()
+    # (member.fitness, member.genes)
+    last_generation_fitness_func = [member[0] for member in last_generation]
+    last_generation_param = [member[1] for member in last_generation]
+
+    # Broadcast fitness function and paramter to all process
+    parameter_for_all = Broadcast_data(last_generation_param , num_proc )
+    fitness_for_all = Broadcast_data( np.real(last_generation_fitness_func) , num_proc )
+
+
+    if rank == 0:
+
+        print('num of proc: ' + str(num_proc))
+        print('population size: ' + str(population_size))
+
+        best_gene_index = np.argmax(fitness_for_all)
+        best_fitness = fitness_for_all[best_gene_index]
+        best_param = parameter_for_all[best_gene_index]
+
+        # Sort parameter set according to their fitness function.
+        sort_index = np.argsort(-fitness_for_all)
+        parameter_for_all = parameter_for_all[sort_index]
+        fitness_for_all = fitness_for_all[sort_index]
+
+        # plot best parameter simulation result
+        photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_energy_flow(
+            full_system_instance, best_param)
+
+        # plot simulation result
+        plot_simulation_result( photon_energy_list, d1_energy_list_change, d2_energy_list_change , time_list , file_path )
+
+        # analyze result
+        analyze_result = \
+            Analyze_peak_and_peak_duration( d1_energy_list_change, d2_energy_list_change, time_list , highest_peak_bool= highest_peak_bool)
+
+        # Now you have to save result to files:
+        save_simulation_result(  best_param , best_fitness, parameter_number, coupling_strength, time_list,
+            analyze_result,
+            d1_energy_list_change , d2_energy_list_change , photon_energy_list , file_path)
+
+def plot_simulation_result(*args):
+    photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list, file_path = args
+    # configure fig, ax
+    fig1, ax1 = plt.subplots(nrows=1, ncols=1)
+    ax1.plot(Time_list, d1_energy_list_change, label='left photon localization')
+    ax1.plot(Time_list, d2_energy_list_change, label='right photon localization')
+    ax1.plot(Time_list, photon_energy_list, label='photon energy')
+
+    ax1.set_xlabel('time')
+    ax1.set_ylabel('E')
+
+    ax1.legend(loc='best')
+
+    # save figure.
+    fig_name = "best_simulation_result.png"
+    fig_name = os.path.join(file_path, fig_name)
+
+    fig1.savefig(fig_name)
+
+def save_simulation_result(*args):
+    best_param, best_fitness, parameter_number, parameter_range, Time_list, \
+    analyze_result, \
+    d1_energy_list_change, d2_energy_list_change, photon_energy_list, file_path = args
+
+    first_peak_time_duration_ratio_best_param, max_energy_change_best_param, localization_duration_ratio_best_param, _ = analyze_result
+
+    # save best simulation result found
+    filename1 = 'best_parameter_and_fitness_function.txt'
+    filename1 = os.path.join(file_path, filename1)
+    with open(filename1, 'w') as f1:
+        # record parameter we fit.
+        for num in best_param:
+            f1.write(str(num) + " , ")
+        f1.write('\n')
+
+        # compute geometric mean and write to output file.
+        normalized_geometric_mean = compute_coupling_geometric_mean(best_param, parameter_number, parameter_range)
+
+        f1.write('geometric mean : \n')
+        f1.write(str(normalized_geometric_mean) + " \n")
+
+        f1.write('best fitness ' + "\n")
+        f1.write(str(best_fitness) + '\n')
+
+        # fit function
+        best_fitness_by_fitting, max_energy_fitness_contribution, localization_duration_ratio_contribution, first_peak_duration_contribution = fit_func1(
+            first_peak_time_duration_ratio_best_param,
+            max_energy_change_best_param,
+            localization_duration_ratio_best_param,
+            normalized_geometric_mean)
+
+        # assert the fitness function we get is correct.
+        fitness_func_diff = np.abs(best_fitness - best_fitness_by_fitting) / np.abs(best_fitness)
+        assert (fitness_func_diff < 0.05)
+
+        f1.write(
+            "contribution from  1. Max energy  2. localization duration ratio  3. first peak duartion_ratio:   " + "\n")
+        f1.write(str(max_energy_fitness_contribution) + "  ,  " + str(
+            localization_duration_ratio_contribution) + "  , " + str(first_peak_duration_contribution) + "\n")
+
+        f1.write('first_peak_Time_duration_ratio, max_energy_change, localization_duration ' + "\n")
+
+        f1.write(str(first_peak_time_duration_ratio_best_param) + "  " + str(max_energy_change_best_param) + "  " + str(
+            localization_duration_ratio_best_param) + "\n")
+
+        # record : time, el, er, energy.
+        write_data(f1, Time_list, 'Time: ')
+        write_data(f1, d1_energy_list_change, "el:  ")
+        write_data(f1, d2_energy_list_change, "er:  ")
+        write_data(f1, photon_energy_list, "e_photon:  ")
+
+def write_data(f, data_list, symbol):
+    f.write(symbol + "\n")
+    for data in data_list:
+        f.write(str(round(data, 4)) + " ")
+    f.write("\n")
 
 
 

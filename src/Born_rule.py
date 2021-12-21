@@ -6,12 +6,30 @@ import matplotlib
 from Fitness_function import simulate_full_system_energy_flow, Analyze_peak_and_peak_duration
 
 from include.full_system_class.Full_system_class import full_system
+from Feed_full_system_to_Genetic_algorithm import output_full_system_state_and_coupling_info
+from include.util import Broadcast_data
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 num_proc = comm.Get_size()
 
+def set_detector_param():
+    dof = 3
+    frequency1 = np.array([1, 0.5, 0.25])
+    nmax1 = [1, 2, 4]
+    initial_d_state1 = [0, 0, 0]
+    d1_energy_window = 1
+
+    frequency2 = np.array([1, 0.5, 0.25])
+    nmax2 = [1, 2, 4]
+    initial_d_state2 = [0, 0, 0]
+    d2_energy_window = 1
+
+    Detector_1_parameter = dof, frequency1, nmax1, initial_d_state1, d1_energy_window
+    Detector_2_parameter = dof, frequency2, nmax2, initial_d_state2, d2_energy_window
+
+    return Detector_1_parameter , Detector_2_parameter
 
 def Analyze_Born_rule(file_path):
 
@@ -20,256 +38,233 @@ def Analyze_Born_rule(file_path):
 
     iteration_number = 100
 
-    coupling_strength = 0.1
+    # parameter_range is range for coupling strength we set in Hamiltonian.
+    coupling_parameter_range = 0.05
 
+    # ----------- parameter for photon ---------------------
     photon_energy = 1
+    initial_photon_wavefunction = [np.sqrt(1) / np.sqrt(4), np.sqrt(3) / np.sqrt(4)]
 
-    dof = 3
+    # -------- parameter for detector -----------
+    Detector_1_parameter, Detector_2_parameter = set_detector_param()
 
-    frequency1 = [1, 0.5 , 0.25 ]
-    frequency2 = [1, 0.5 , 0.25]
-
-    frequency1 = np.array(frequency1)
-    frequency2 = np.array(frequency2)
-
-    nmax1 = [1, 2, 4 ]
-    nmax2 = [1, 2, 4]
-
-    initial_state1 = [0, 0, 0]
-    initial_state2 = [0, 0, 0]
-
-    energy_window1 = 1
-    energy_window2 = 1
-
+    # - -------  specify input paramter for full system  (photon + detector)  ----------------
+    # include state in full system (photon + detector) which satisfy energy condition  E - E_init <= energy window
     full_system_energy_window = 0
-
-    Detector_1_parameter = dof, frequency1, nmax1, initial_state1, energy_window1
-    Detector_2_parameter = dof, frequency2, nmax2, initial_state2, energy_window2
-
-    Initial_Wavefunction = [np.sqrt(1) / np.sqrt(4), np.sqrt(3) / np.sqrt(4)]
 
     # full system 's construct_full_system_Hamiltonian_part2() is called within fitness function in each cycle of genetic algorithm.
     full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window,
-                                       photon_energy, Initial_Wavefunction)
+                                       photon_energy, initial_photon_wavefunction)
 
     full_system_instance.construct_full_system_Hamiltonian_part1()
 
     # print information about structure of system
-    if(rank == 0):
-        full_system_instance.output_state_mode()
-        full_system_instance.detector1.output_detector_state_coupling()
-        full_system_instance.output_off_diagonal_coupling_mode_info()
-
-        print( "parameter number for detector1: "  + str(full_system_instance.detector1.offdiag_coupling_num) )
-        print( "parameter number for detector2: " + str(full_system_instance.detector2.offdiag_coupling_num) )
-        print( "paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiag_param_num -
-                                                                                    full_system_instance.detector1.offdiag_coupling_num -
-                                                                                    full_system_instance.detector2.offdiag_coupling_num))
+    output_full_system_state_and_coupling_info(full_system_instance)
 
     parameter_number = full_system_instance.output_offdiagonal_parameter_number()
 
-    Left_localization_number = 0
-    Right_localization_number = 0
+    left_localization_num = 0
+    right_localization_num = 0
 
     parameter_list = []
-    Max_energy_change_list = []
-    Localization_side_list = []
+    max_energy_change_list = []
+    localization_side_list = []
 
     iteration_number_per_core = int (iteration_number / num_proc)
     iteration_number = iteration_number_per_core * num_proc
 
     for i in range(iteration_number_per_core):
-        # randomly generate parameter according to coupling strength:
-        Coupling_param = np.random.normal(0, coupling_strength, parameter_number)
+        # randomly generate parameter according to coupling_parameter_range:
+        coupling_param = np.random.normal(0, coupling_parameter_range, parameter_number)
 
-        photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = simulate_full_system_energy_flow(full_system_instance, Coupling_param)
+        photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_energy_flow(full_system_instance, coupling_param)
 
-        First_peak_Time_duration, max_energy_change, Localization_duration_ratio, localization_bool = Analyze_peak_and_peak_duration(
-            d1_energy_list_change, d2_energy_list_change, Time_list , highest_peak_bool= highest_peak_bool)
+        _, max_energy_change, _, localization_bool = Analyze_peak_and_peak_duration(
+            d1_energy_list_change, d2_energy_list_change, time_list , highest_peak_bool= highest_peak_bool)
 
         if(localization_bool == 1):
-            Left_localization_number = Left_localization_number + 1
+            left_localization_num = left_localization_num + 1
+        else:
+            right_localization_num = right_localization_num + 1
 
-        if(localization_bool == 2):
-            Right_localization_number = Right_localization_number + 1
+        parameter_list.append(coupling_param)
+        max_energy_change_list.append(max_energy_change)
+        localization_side_list.append(localization_bool)
 
-        parameter_list.append(Coupling_param)
-        Max_energy_change_list.append(max_energy_change)
-        Localization_side_list.append(localization_bool)
+    # Broadcast data to all process.
+    parameter_list = Broadcast_data(parameter_list , num_proc )
+    max_energy_change_list = Broadcast_data(max_energy_change_list , num_proc)
+    localization_side_list = Broadcast_data(localization_side_list , num_proc )
 
-    # shape:  [iteration_per_core]
-    Max_energy_change_list = np.array(Max_energy_change_list)
-    Localization_side_list = np.array(Localization_side_list)
-    # shape: [iteration_per_core , parameter_number ]
-    parameter_list = np.array(parameter_list)
-
-    recv_max_energy_change_list = []
-    recv_localization_list = []
-    recv_parameter_list = []
-
-    if(rank == 0):
-        recv_max_energy_change_list = np.empty([num_proc, iteration_number_per_core] , dtype = np.float64)
-        recv_localization_list = np.empty([num_proc, iteration_number_per_core], dtype = np.int64)
-        recv_parameter_list = np.empty([num_proc, iteration_number_per_core, parameter_number] , dtype = np.float64)
-
-    comm.Gather(Max_energy_change_list , recv_max_energy_change_list , 0)
-    comm.Gather(Localization_side_list, recv_localization_list , 0)
-    comm.Gather(parameter_list , recv_parameter_list, 0)
-
-    if(rank == 0):
-        Max_energy_change_list = np.reshape(recv_max_energy_change_list,
-                                            (recv_max_energy_change_list.shape[0] * recv_max_energy_change_list.shape[1]))
-        Localization_side_list = np.reshape(recv_localization_list,
-                                            (recv_localization_list.shape[0] * recv_localization_list.shape[1]))
-        parameter_list = np.reshape(recv_parameter_list, (
-        recv_parameter_list.shape[0] * recv_parameter_list.shape[1], recv_parameter_list.shape[2]))
-
-    Analyze_Localization_prob(iteration_number_per_core, Max_energy_change_list, Localization_side_list, parameter_list, Initial_Wavefunction, iteration_number, file_path)
+    Analyze_Localization_prob( max_energy_change_list, localization_side_list, parameter_list, initial_photon_wavefunction, iteration_number_per_core, iteration_number, file_path)
 
 
-
-
-def Analyze_Localization_prob(iteration_number_per_core,Max_energy_change_list , Localization_side_list, parameter_list , psi0 , iteration_number, file_path):
+def Analyze_Localization_prob( max_energy_change_list, localization_side_list, parameter_list, psi0, iteration_number_per_core, iteration_number, file_path):
     if (rank == 0):
-        print('number of core:  ')
-        print(num_proc)
+        sample_num = len(localization_side_list)
 
-        print('total iteration number: ')
-        print(iteration_number)
+        left_side_sample_num = 0
+        right_side_sample_num = 0
+        left_localization_energy_list = []
+        right_localization_energy_list = [ ]
+        for i in range(sample_num):
+            if localization_side_list[i] == 1:
+                left_side_sample_num = left_side_sample_num + 1
+                left_localization_energy_list.append(max_energy_change_list[i])
+            if localization_side_list[i] == 2:
+                right_side_sample_num = right_side_sample_num + 1
+                right_localization_energy_list.append(max_energy_change_list[i])
 
-        print('iteartion number per core: ')
-        print(iteration_number_per_core)
+        left_side_prob = left_side_sample_num / sample_num
+        right_side_prob = right_side_sample_num / sample_num
 
-        List_len = len(Localization_side_list)
+        left_max_energy_change_list = [max_energy_change_list[i] for i in range(len(max_energy_change_list)) if localization_side_list[i] == 1]
+        right_max_energy_change_list = [max_energy_change_list[i] for i in range(len(max_energy_change_list)) if
+                                        localization_side_list[i] == 2]
 
-        Left_side_time = 0
-        Right_side_time = 0
-        Left_localization_energy_list = []
-        Right_localization_energy_list = [ ]
-        for i in range(List_len):
-            if Localization_side_list[i] == 1:
-                Left_side_time = Left_side_time + 1
-                Left_localization_energy_list.append(Max_energy_change_list[i])
-            if Localization_side_list[i] == 2:
-                Right_side_time = Right_side_time + 1
-                Right_localization_energy_list.append(Max_energy_change_list[i])
-
-        Left_side_prob = Left_side_time / List_len
-        Right_side_prob = Right_side_time / List_len
-        print("wave function: " + str(psi0))
         Born_prob = np.power(psi0 , 2)
-        print("Born rule prob (theoretical):  " + str(Born_prob))
-        print("Left side prob:  " + str(Left_side_prob))
-        print("Right side prob: " + str(Right_side_prob))
-        print('total sample number ' + str(List_len))
-
-        Criteria_list = [ 0 , 0.6, 0.7, 0.8, 0.9]
-        Total_num_after_sift_list = []
-        Left_side_prob_after_sift_list = []
-        Right_side_prob_after_sift_list = []
-        for Criteria in Criteria_list:
-            Left_localization_energy_list_after_sift = [i for i in Left_localization_energy_list if i >= Criteria]
-            Right_localization_energy_list_after_sift = [i for i in Right_localization_energy_list if i >= Criteria]
-            Total_sample_num_after_sift = len(Left_localization_energy_list_after_sift) + len(
-                Right_localization_energy_list_after_sift)
-            if(Total_sample_num_after_sift!=0):
-                Left_side_prob_after_sift = len(Left_localization_energy_list_after_sift) / Total_sample_num_after_sift
-                Right_side_prob_after_sift = len(Right_localization_energy_list_after_sift) / Total_sample_num_after_sift
-            else:
-                Left_side_prob_after_sift = 0
-                Right_side_prob_after_sift = 0
-
-            Total_num_after_sift_list.append(Total_sample_num_after_sift)
-            Left_side_prob_after_sift_list.append(Left_side_prob_after_sift)
-            Right_side_prob_after_sift_list.append(Right_side_prob_after_sift)
 
 
-        # print('Localization criteria:  ' + str(Criteria) + "  .  total sample number:  " + str(
-        #     Total_sample_num_after_sift))
-        # print('Left side prob:  ' + str(Left_side_prob_after_sift) + "      Right side prob:   " + str(
-        #     Right_side_prob_after_sift))
+        # compute localization probability after we sift result with maximum energy criteria.
+        criteria_list, tot_sample_num_satisfy_criteria_list, left_side_prob_satisfy_criteria_list, right_side_prob_satisfy_criteria_list \
+            = compute_localization_prob_satisfy_criteria(left_localization_energy_list , right_localization_energy_list)
 
-        filename = 'Localization_analyze_result.txt'
-        filename = os.path.join(file_path, filename)
+        # print information to screen
+        print_info(iteration_number , iteration_number_per_core , psi0, Born_prob, left_side_prob, right_side_prob , sample_num ,
+                   max_energy_change_list, left_max_energy_change_list , right_max_energy_change_list)
 
-        with open(filename, 'w') as f:
-            f.write('Critera   Total_number_sample  left_prob   right_prob')
-            f.write('\n')
+        # output localization info
+        output_localization_info(criteria_list, tot_sample_num_satisfy_criteria_list , left_side_prob_satisfy_criteria_list , right_side_prob_satisfy_criteria_list , file_path)
 
-            for i in range(len(Criteria_list)):
-                Criteria = Criteria_list[i]
-                Total_num_after_sift =  Total_num_after_sift_list[i]
-                Left_side_prob_after_sift = Left_side_prob_after_sift_list[i]
-                Right_side_prob_after_sift = Right_side_prob_after_sift_list[i]
+        # output parameter
+        output_param(parameter_list, file_path)
 
-                f.write( str(Criteria) + "  " +  str(Total_num_after_sift) + "  " + str(Left_side_prob_after_sift) + "  " + str(Right_side_prob_after_sift) + "\n" )
+        # output localization information and energy exchange for localization to left
+        left_localize_param_file_name = "localization_parameter_list_left.txt"
+        output_localization_param_and_max_energy_change(psi0, max_energy_change_list, localization_side_list, parameter_list, left_localize_param_file_name,
+                                                        file_path, localization_symbol= 1)
 
-        # write parameter:
-        filename1 = "parameter_for_simulation.txt"
-        filename1 = os.path.join(file_path, filename1)
+        # output localization information and energy exchange for localization to right
+        right_localize_param_file_name = "localization parameter list right.txt"
+        output_localization_param_and_max_energy_change(psi0, max_energy_change_list, localization_side_list, parameter_list, right_localize_param_file_name,
+                                                        file_path , localization_symbol=  2)
 
-        with open(filename1 , 'w') as f1:
-            f1.write('parameter set : \n')
-            parameter_list_len = len(parameter_list)
+def compute_localization_prob_satisfy_criteria(left_localization_energy_list , right_localization_energy_list):
+    criteria_list = [0, 0.6, 0.7, 0.8, 0.9]
+    tot_sample_num_satisfy_criteria_list = []
+    left_side_prob_satisfy_criteria_list = []
+    right_side_prob_satisfy_criteria_list = []
 
-            for i in range(parameter_list_len):
-                parameter_set = parameter_list[i]
-                for number in parameter_set:
-                    f1.write(str(number) + " ")
-                f1.write('\n')
+    for criteria in criteria_list:
+        left_side_sample_num = [i for i in left_localization_energy_list if i >= criteria]
+        left_side_num = len(left_side_sample_num)
+        right_side_sample_num = [i for i in right_localization_energy_list if i >= criteria]
+        right_side_num = len(right_side_sample_num)
 
-        filename2 = "localization_parameter_list_left.txt"
-        filename2 = os.path.join(file_path, filename2)
+        tot_sample_num_satisfy_criteria = left_side_num + right_side_num
 
-        Left_Max_energy_change_list = [ Max_energy_change_list[i] for i in range(len(Max_energy_change_list)) if Localization_side_list[i] == 1  ]
+        if tot_sample_num_satisfy_criteria != 0:
+            left_side_prob_satisfy_criteria = len(left_side_sample_num) / tot_sample_num_satisfy_criteria
+            right_side_prob_satisfy_criteria = len(right_side_sample_num) / tot_sample_num_satisfy_criteria
+        else:
+            left_side_prob_satisfy_criteria = 0
+            right_side_prob_satisfy_criteria = 0
 
-        with open(filename2 , "w") as f2:
-            for j in psi0:
-                f2.write(str(j) + " ")
-            f2.write('\n')
+        tot_sample_num_satisfy_criteria_list.append(tot_sample_num_satisfy_criteria)
+        left_side_prob_satisfy_criteria_list.append(left_side_prob_satisfy_criteria)
+        right_side_prob_satisfy_criteria_list.append(right_side_prob_satisfy_criteria)
 
-            parameter_list_len  = len(Max_energy_change_list)
-            for i in range(parameter_list_len):
-                if(Localization_side_list[i] == 1):
-                    parameter = parameter_list[i]
-                    for j in parameter:
-                        f2.write(str(j) + ' ')
-                    f2.write('\n')
-                    f2.write(str(Max_energy_change_list[i]) + "\n")
+    return criteria_list , tot_sample_num_satisfy_criteria_list , left_side_prob_satisfy_criteria_list , right_side_prob_satisfy_criteria_list
 
-        Right_Max_energy_change_list = [Max_energy_change_list[i] for i in range(len(Max_energy_change_list)) if
-                                        Localization_side_list[i] == 2]
+def print_info(*args):
 
-        filename3 = "localization_parameter_list_right.txt"
-        filename3 = os.path.join(file_path,filename3)
+    iteration_number , iteration_number_per_core , psi0, Born_prob, left_side_prob, right_side_prob , sample_num ,\
+    max_energy_change_list, left_max_energy_change_list , right_max_energy_change_list = args
 
-        with open(filename3 ,"w" ) as f3:
-            for j in psi0:
-                f3.write(str(j) + " ")
+    print('number of core:  ')
+    print(num_proc)
 
-            f3.write('\n')
+    print('total iteration number: ')
+    print(iteration_number)
 
-            parameter_len = len(Max_energy_change_list)
-            for i in range(parameter_len):
-                if Localization_side_list[i] == 2:
+    print('iteartion number per core: ')
+    print(iteration_number_per_core)
 
-                    parameter = parameter_list[i]
-                    for j in parameter:
-                        f3.write(str(j) + ' ')
-                    f3.write('\n')
-                    f3.write(str(Max_energy_change_list[i]) + "\n")
+    print("wave function: " + str(psi0))
+    print("Born rule prob (theoretical):  " + str(Born_prob))
+    print("Left side prob:  " + str(left_side_prob))
+    print("Right side prob: " + str(right_side_prob))
+    print('total sample number ' + str(sample_num))
 
-        print('Mean localization energy:  ')
-        print(np.mean(Max_energy_change_list))
+    print('Mean localization energy:  ')
+    print(np.mean(max_energy_change_list))
 
-        print('Mean localization energy left:  ' )
-        print(np.mean(Left_Max_energy_change_list))
+    print('Mean localization energy left:  ')
+    print(np.mean(left_max_energy_change_list))
 
-        print("Mean localization energy right:  ")
-        print(np.mean(Right_Max_energy_change_list))
+    print("Mean localization energy right:  ")
+    print(np.mean(right_max_energy_change_list))
 
+def output_localization_info(*args):
 
+    criteria_list, tot_sample_num_satisfy_criteria_list , left_side_prob_satisfy_criteria_list , right_side_prob_satisfy_criteria_list , file_path = args
+    filename = 'Localization_analyze_result.txt'
+    filename = os.path.join(file_path, filename)
 
+    with open(filename, 'w') as f:
+        f.write('Critera   Total_number_sample  left_prob   right_prob')
+        f.write('\n')
 
+        for i in range(len(criteria_list)):
+            criteria = criteria_list[i]
+            total_num_after_sift = tot_sample_num_satisfy_criteria_list[i]
+            left_side_prob_satisfy_criteria = left_side_prob_satisfy_criteria_list[i]
+            right_side_prob_satisfy_criteria = right_side_prob_satisfy_criteria_list[i]
 
+            f.write(str(criteria) + "  " + str(total_num_after_sift) + "  " + str(
+                left_side_prob_satisfy_criteria) + "  " + str(right_side_prob_satisfy_criteria) + "\n")
+
+def output_param(parameter_list, file_path):
+    # write parameter:
+    filename1 = "parameter_for_simulation.txt"
+    filename1 = os.path.join(file_path, filename1)
+
+    with open(filename1, 'w') as f1:
+        f1.write('parameter set : \n')
+        parameter_list_len = len(parameter_list)
+
+        for i in range(parameter_list_len):
+            parameter_set = parameter_list[i]
+            for number in parameter_set:
+                f1.write(str(number) + " ")
+            f1.write('\n')
+
+def output_localization_param_and_max_energy_change( psi0, max_energy_change_list , localization_side_list , parameter_list , file_name , file_path , localization_symbol):
+    '''
+
+    :param psi0:
+    :param max_energy_change_list:
+    :param localization_side_list:
+    :param parameter_list:
+    :param file_name:
+    :param file_path:
+    :param localization_symbol: localization symbol == 1: localize to left.  localization symbol == 2 : localize to right.
+    :return:
+    '''
+
+    file_name = os.path.join(file_path, file_name)
+
+    with open(file_name, "w") as f2:
+        for j in psi0:
+            f2.write(str(j) + " ")
+        f2.write('\n')
+
+        parameter_list_len = len(max_energy_change_list)
+        for i in range(parameter_list_len):
+            if (localization_side_list[i] ==  localization_symbol ):
+                parameter = parameter_list[i]
+                for j in parameter:
+                    f2.write(str(j) + ' ')
+                f2.write('\n')
+                f2.write(str(max_energy_change_list[i]) + "\n")
 
