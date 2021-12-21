@@ -6,102 +6,114 @@ rank = comm.Get_rank()
 num_proc = comm.Get_size()
 from include.full_system_class.Full_system_class import full_system
 
-def Analyze_peak_and_peak_duration(e2l_change, e2r_change , Time ) :
+def extract_first_peak(list):
+    # extract list of consecutive number from list as set this as first peak.
+    list_len = len(list)
+    first_peak_list = []
+    if list_len > 1:
+        for i in range(1, list_len):
+            first_peak_list.append(list[i-1])
+            if(list[i] - list[i-1] != 1):
+                break
+
+    else:
+        if(list_len == 1):
+            first_peak_list = [ list[0] ]
+
+    return first_peak_list
+
+def analyze_peak_property(time, energy_change, energy_change_peak_index):
+    '''
+    Three variables are of particular interest:
+    1. time duration for first peak
+    2. maximum energy change for first peak
+    3. time for localization.
+    :return : first_peak_time_duration, max_energy_change_first_peak , localization_duration_ratio
+    '''
+    time_step = time[1] - time[0]
+    final_time = time[-1]
+
+    # time to localize
+    localization_duration = len(energy_change_peak_index) * time_step
+    localization_duration_ratio = localization_duration / final_time
+
+    # first peak's index and peak value:  (here peak is peak for energy change)
+    energy_change_first_peak_index = extract_first_peak(energy_change_peak_index)
+    first_peak_len = len(energy_change_first_peak_index)
+
+    energy_change_first_peak = energy_change[energy_change_first_peak_index]
+    first_peak_time = np.array(time)[energy_change_first_peak_index]
+    # time_duration.
+    first_peak_time_duration = (first_peak_time[-1] - first_peak_time[0]) if first_peak_len > 0 else 0
+
+    # maximum energy change for first peak. We set maximum energy change for first peak and max energy change.
+    max_energy_change_first_peak = max(energy_change_first_peak) if first_peak_len !=0 else 0
+
+
+    return first_peak_time_duration, max_energy_change_first_peak , localization_duration_ratio
+
+def decide_localization_side(highest_peak_bool, max_energy_change , max_e2l_change , max_e2r_change, e2l_change_peak_index ,  e2r_change_peak_index ):
+    if(highest_peak_bool):
+        # ------- criteria: use peak's highest energy. ---------------------
+        if(max_energy_change == max_e2l_change ):
+            localization_bool = 1
+        else:
+            localization_bool = 2
+        # --------------------------------------------------------------
+    else:
+        # --------- criteria : use earliest peak as criteria ------------
+        localization_bool = 0
+        if (len(e2l_change_peak_index) == 0):
+            localization_bool = 2
+        elif (len(e2r_change_peak_index) == 0):
+            localization_bool = 1
+        else:
+            if ( e2l_change_peak_index[0] < e2r_change_peak_index[0]):
+                # first peak appear at left
+                localization_bool = 1
+
+            elif ( e2l_change_peak_index[0] > e2r_change_peak_index[0]):
+                localization_bool = 2
+
+    return localization_bool
+
+def Analyze_peak_and_peak_duration(e2l_change, e2r_change, time , highest_peak_bool ) :
+    '''
+
+    :param e2l_change: change of energy for l.h.s.
+    :param e2r_change: change of energy for r.h.s.
+    :param time:
+    :param highest_peak_bool : if bool == True, we choose highest peak as criteria for localization.
+                               if bool == False, we choose first peak as criteria for localization.
+    :return:
+    '''
 
     max_e2l_change = max(e2l_change)
     max_e2r_change = max(e2r_change)
-
-    # we find first peak instead of highest peak. We first find highest peak.
-    # Then set ratio * highest peak as threashould to be treated as a peak. Then we find earliest peak in simulation.
     max_energy_change = max(max_e2l_change, max_e2r_change)
-    ratio = 0.8
-    criteria_for_peak = ratio * max_energy_change
+
+    # if we use first peak instead of highest peak as criteria. (highest_peak_bool == False)
+    # We first find highest peak.
+    # Then set ratio * highest peak as threashould to be treated as a peak. Then we find earliest peak in simulation.
+    peak_criteria_ratio = 0.8
+    criteria_for_peak = peak_criteria_ratio * max_energy_change
 
     e2l_change_peak_index = [i for i in range(len(e2l_change)) if e2l_change[i] > criteria_for_peak]
     e2r_change_peak_index = [i for i in range(len(e2r_change)) if e2r_change[i] > criteria_for_peak]
 
-    Localization_bool = 0
-    if (len(e2l_change_peak_index) == 0):
-        Localization_bool = 2
-    elif (len(e2r_change_peak_index) == 0):
-        Localization_bool = 1
+    # ----  decide which side this simulation localize ---------
+    localization_bool = decide_localization_side(highest_peak_bool, max_energy_change, max_e2l_change, max_e2r_change,
+                             e2l_change_peak_index, e2r_change_peak_index)
+    # -----------------------------------------
+
+    if localization_bool == 1:
+        # localize to left
+        first_peak_time_duration, max_energy_change , localization_duration_ratio = analyze_peak_property(time, e2l_change, e2l_change_peak_index)
     else:
-        if (e2l_change_peak_index[0] < e2r_change_peak_index[0]):
-            # first peak appear at left
-            Localization_bool = 1
+        first_peak_time_duration, max_energy_change , localization_duration_ratio = analyze_peak_property(time, e2r_change, e2r_change_peak_index)
 
-        elif (e2l_change_peak_index[0] > e2r_change_peak_index[0]):
-            Localization_bool = 2
 
-    # ------------------  Another criteria -----------------------------
-    if(max_energy_change == max_e2l_change ):
-        Localization_bool = 1
-    else:
-        Localization_bool = 2
-    # -------------------------------------------------
-
-    time_step = Time[1] - Time[0]
-    Localization_duration_left = len(e2l_change_peak_index) * time_step
-    Localization_duration_right = len(e2r_change_peak_index) * time_step
-    Localization_duration_ratio = 0
-    if Localization_bool == 1:
-        Localization_duration_ratio = Localization_duration_left / Time[-1]
-    else:
-        Localization_duration_ratio = Localization_duration_right / Time[-1]
-
-    # first peak list and its index
-    e2l_change_first_peak_index = []
-    e2r_change_first_peak_index = []
-
-    # value of first peak:
-    if len(e2l_change_peak_index) > 1:
-        for i in range(1, len(e2l_change_peak_index)):
-            e2l_change_first_peak_index.append(e2l_change_peak_index[i - 1])
-            if (e2l_change_peak_index[i] - e2l_change_peak_index[i - 1] != 1):
-                break
-    else:
-        if (len(e2l_change_peak_index) == 1):
-            e2l_change_first_peak_index.append(e2l_change_peak_index[0])
-
-    if len(e2r_change_peak_index) > 1:
-        for i in range(1, len(e2r_change_peak_index)):
-            e2r_change_first_peak_index.append(e2r_change_peak_index[i - 1])
-            if (e2r_change_peak_index[i] - e2r_change_peak_index[i - 1] != 1):
-                break
-    else:
-        if (len(e2r_change_peak_index) == 1):
-            e2r_change_first_peak_index.append(e2r_change_peak_index[0])
-
-    e2l_change_first_peak = e2l_change[e2l_change_first_peak_index]
-    e2r_change_first_peak = e2r_change[e2r_change_first_peak_index]
-
-    if (len(e2l_change_first_peak) != 0):
-        max_e2l_change = max(e2l_change_first_peak)
-    if (len(e2r_change_first_peak) != 0):
-        max_e2r_change = max(e2r_change_first_peak)
-
-    First_peak_Time_duration_right = 0
-    First_peak_Time_duration_left =  0
-
-    if(len(e2r_change_first_peak_index)  > 0) :
-        First_peak_time_right = np.array(Time)[e2r_change_first_peak_index]
-        First_peak_list_right = e2r_change[e2r_change_first_peak_index]
-        First_peak_Time_duration_right = First_peak_time_right[-1] - First_peak_time_right[0]\
-
-    # now we find peak for left detector
-    if( len(e2l_change_first_peak_index) > 0  ):
-        First_peak_time_left = np.array(Time)[e2l_change_first_peak_index]
-        First_peak_list_left = e2l_change[e2l_change_first_peak_index]
-        First_peak_Time_duration_left = First_peak_time_left[-1] - First_peak_time_left[0]
-
-    if Localization_bool == 1 :
-        First_peak_Time_duration = First_peak_Time_duration_left
-        max_energy_change = max_e2l_change
-    else:
-        First_peak_Time_duration = First_peak_Time_duration_right
-        max_energy_change = max_e2r_change
-
-    return First_peak_Time_duration, max_energy_change,Localization_duration_ratio, Localization_bool
+    return first_peak_time_duration, max_energy_change,localization_duration_ratio, localization_bool
 
 def fit_func1(First_peak_Time_duration, max_energy_change ,  Localization_duration_ratio, parameter_geometric_mean_ratio):
     '''
@@ -130,9 +142,9 @@ def fit_func1(First_peak_Time_duration, max_energy_change ,  Localization_durati
 
     Fitness_func_value = Max_energy_fitness_contribution + Localization_duration_ratio_contribution + First_peak_duration_contribution
 
-    return  Fitness_func_value , Max_energy_fitness_contribution, Localization_duration_ratio_contribution , First_peak_duration_contribution
+    return Fitness_func_value , Max_energy_fitness_contribution, Localization_duration_ratio_contribution , First_peak_duration_contribution
 
-def Evolve_full_system_and_return_energy_change(full_system_instance , off_diagonal_coupling ):
+def simulate_full_system_energy_flow(full_system_instance, off_diagonal_coupling):
     # construct off diagonal part for Hamiltonian
     full_system_instance.construct_full_system_Hamiltonian_part2(off_diagonal_coupling)
 
@@ -140,27 +152,29 @@ def Evolve_full_system_and_return_energy_change(full_system_instance , off_diago
     full_system_instance.initialize_wave_function()
 
     # Evolve dynamics of full system
-    photon_energy_list, d1_energy_list, d2_energy_list, Time_list = full_system_instance.Evolve_dynamics()
+    photon_energy_list, d1_energy_list, d2_energy_list, time_list = full_system_instance.Evolve_dynamics()
 
     # Analyze_simulation result of full_system. (wave function)
-    photon_energy = full_system_instance.photon_energy
-    photon_energy_list = photon_energy_list / photon_energy
+    init_photon_energy = full_system_instance.init_photon_energy
+
     d1_energy_list_change = d1_energy_list - d1_energy_list[0]
     d2_energy_list_change = d2_energy_list - d2_energy_list[0]
 
-    d1_energy_list_change = d1_energy_list_change / photon_energy
-    d2_energy_list_change = d2_energy_list_change / photon_energy
+    photon_energy_list = photon_energy_list / init_photon_energy
+    d1_energy_list_change = d1_energy_list_change / init_photon_energy
+    d2_energy_list_change = d2_energy_list_change / init_photon_energy
 
-    return photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list
+    return photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list
 
-def fitness_function(off_diagonal_coupling , data ):
+def fitness_function(off_diagonal_coupling , param  ):
      # data is maximum range of coupling strength
-     parameter_range , full_system_instance, parameter_number = data
+     parameter_range , full_system_instance, parameter_number , highest_peak_bool  = param
 
      # construct off diagonal part of Hamiltonian. and initialize wave function
-     photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance , off_diagonal_coupling)
+     photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_energy_flow( full_system_instance, off_diagonal_coupling)
 
-     First_peak_Time_duration, max_energy_change,Localization_duration_ratio, localization_bool = Analyze_peak_and_peak_duration(d1_energy_list_change, d2_energy_list_change, Time_list)
+     first_peak_time_duration, max_energy_change, localization_duration_ratio, localization_bool = \
+         Analyze_peak_and_peak_duration(d1_energy_list_change, d2_energy_list_change, time_list, highest_peak_bool= highest_peak_bool )
 
      # compute geometric mean and its ratio to coupling strength.
      geometric_mean = 1
@@ -170,7 +184,7 @@ def fitness_function(off_diagonal_coupling , data ):
 
      geometric_mean_ratio = geometric_mean / parameter_range
 
-     fitness_func_value , Max_energy_fitness_contribution, Localization_duration_ratio_contribution , First_peak_duration_contribution  = fit_func1(First_peak_Time_duration, max_energy_change, Localization_duration_ratio,
+     fitness_func_value , Max_energy_fitness_contribution, Localization_duration_ratio_contribution , First_peak_duration_contribution  = fit_func1(first_peak_time_duration , max_energy_change, localization_duration_ratio,
                                    geometric_mean_ratio)
 
      return fitness_func_value

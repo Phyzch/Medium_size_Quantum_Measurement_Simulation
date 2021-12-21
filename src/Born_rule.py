@@ -3,7 +3,7 @@ import os
 
 import matplotlib.pyplot as plt
 import matplotlib
-from Fitness_function import Evolve_full_system_and_return_energy_change, Analyze_peak_and_peak_duration
+from Fitness_function import simulate_full_system_energy_flow, Analyze_peak_and_peak_duration
 
 from include.full_system_class.Full_system_class import full_system
 
@@ -14,6 +14,10 @@ num_proc = comm.Get_size()
 
 
 def Analyze_Born_rule(file_path):
+
+    # use highest peak as criteria for localization.
+    highest_peak_bool = True
+
     iteration_number = 100
 
     coupling_strength = 0.1
@@ -44,9 +48,10 @@ def Analyze_Born_rule(file_path):
 
     Initial_Wavefunction = [np.sqrt(1) / np.sqrt(4), np.sqrt(3) / np.sqrt(4)]
 
-    # Other part of code for full system is called within fitness function in each cycle of genetic algorithm.
+    # full system 's construct_full_system_Hamiltonian_part2() is called within fitness function in each cycle of genetic algorithm.
     full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window,
                                        photon_energy, Initial_Wavefunction)
+
     full_system_instance.construct_full_system_Hamiltonian_part1()
 
     # print information about structure of system
@@ -77,10 +82,10 @@ def Analyze_Born_rule(file_path):
         # randomly generate parameter according to coupling strength:
         Coupling_param = np.random.normal(0, coupling_strength, parameter_number)
 
-        photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(full_system_instance , Coupling_param)
+        photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = simulate_full_system_energy_flow(full_system_instance, Coupling_param)
 
         First_peak_Time_duration, max_energy_change, Localization_duration_ratio, localization_bool = Analyze_peak_and_peak_duration(
-            d1_energy_list_change, d2_energy_list_change, Time_list)
+            d1_energy_list_change, d2_energy_list_change, Time_list , highest_peak_bool= highest_peak_bool)
 
         if(localization_bool == 1):
             Left_localization_number = Left_localization_number + 1

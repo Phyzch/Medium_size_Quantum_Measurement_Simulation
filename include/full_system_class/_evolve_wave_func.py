@@ -93,7 +93,7 @@ def Evolve_dynamics(self):
             d1_energy_list.append(d1_energy)
             d2_energy_list.append(d2_energy)
 
-            if (step == 0 and abs(photon_energy - self.photon_energy) > 0.1):
+            if (step == 0 and abs(photon_energy - self.init_photon_energy) > 0.1):
                 raise NameError("Error for photon energy convergence")
 
             Time_list.append(t)

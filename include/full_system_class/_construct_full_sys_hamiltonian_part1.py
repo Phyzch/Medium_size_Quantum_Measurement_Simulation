@@ -30,7 +30,7 @@ def __compute_initial_energy(self):
     d1_energy = np.sum(np.array(self.detector1.frequency) * np.array(self.detector1.initial_state))
     d2_energy = np.sum(np.array(self.detector2.frequency) * np.array(self.detector2.initial_state))
 
-    self.initial_energy = self.photon_energy + d1_energy + d2_energy
+    self.initial_energy = self.init_photon_energy + d1_energy + d2_energy
 
 
 def __construct_full_system_diagonal_Hamiltonian(self):

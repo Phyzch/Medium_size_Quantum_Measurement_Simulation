@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from include.Full_system_class import full_system
+from include.full_system_class.Full_system_class import full_system
 
-from include.Genetic_algorithm_class import Extend_Genetic_algorithm
-from Fitness_function import fitness_function , Evolve_full_system_and_return_energy_change, Analyze_peak_and_peak_duration , fit_func1
+from include.genetic_algorithm_class.Genetic_algorithm_class import Extend_Genetic_algorithm
+from Fitness_function import fitness_function , simulate_full_system_energy_flow, Analyze_peak_and_peak_duration , fit_func1
 
 from include.util import Broadcast_data
 from mpi4py import MPI
@@ -95,7 +95,7 @@ def save_simulation_result(*args):
         f1.write('\n')
 
 def Evaluate_simulation_result( *args ):
-    ga, full_system_instance , file_path , population_size, coupling_strength , parameter_number  = args
+    ga, full_system_instance , file_path , population_size, coupling_strength , parameter_number, highest_peak_bool = args
 
     # ------------------  Evaluate result of Genetic algorithm ----------------------
 
@@ -127,11 +127,11 @@ def Evaluate_simulation_result( *args ):
         fitness_for_all = fitness_for_all[Sort_index]
 
         # plot best parameter simulation result
-        photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = Evolve_full_system_and_return_energy_change(
+        photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list = simulate_full_system_energy_flow(
             full_system_instance, best_param)
 
-        First_peak_Time_duration_best_param, max_energy_change_best_param, Localization_duration_ratio_best_param, localization_bool = Analyze_peak_and_peak_duration(
-            d1_energy_list_change, d2_energy_list_change, Time_list)
+        First_peak_Time_duration_best_param, max_energy_change_best_param, Localization_duration_ratio_best_param, localization_bool = \
+            Analyze_peak_and_peak_duration( d1_energy_list_change, d2_energy_list_change, Time_list , highest_peak_bool= highest_peak_bool)
 
         # plot simulation result
         plot_simulation_result(Time_list , photon_energy_list, d1_energy_list_change, d2_energy_list_change , file_path )
@@ -141,116 +141,124 @@ def Evaluate_simulation_result( *args ):
             First_peak_Time_duration_best_param , max_energy_change_best_param , Localization_duration_ratio_best_param ,
             d1_energy_list_change , d2_energy_list_change , photon_energy_list , file_path)
 
+
 def Implement_genetic_algorithm(file_path):
-    # - -------  specify input paramter for detector and full system  ----------------
-
-    # --------------- parameter for photon --------------------
     coupling_strength = 0.01
-    # fixme : What is photonic energy scale?
-    photon_energy_scale = 1
+    highest_peak_bool = True
 
-    photon_energy = 1 * photon_energy_scale
+    # --------------- parameter for photon ------------
+    photon_energy = 1
     initial_photon_wavefunction = [1/np.sqrt(2) , 1/np.sqrt(2)]
 
-    # ----------- parameter for detector ---------------------------
-    dof = 3
-    frequency1 = [1, 0.5 , 0.25 ]
-    frequency2 = [1, 0.5 , 0.25 ]
-    frequency1 = np.array(frequency1) * photon_energy_scale
-    frequency2 = np.array(frequency2) * photon_energy_scale
-    # fixme : anyway to simplify parameter displamer? Why namx1, nmax2?
-    nmax1 = [1, 2 , 4]
-    nmax2 = [1, 2, 4 ]
+    # ---- parameter for detector ---------
+    Detector_1_parameter, Detector_2_parameter = set_detector_param()
 
-    # fixme : better parameter name ?
-    initial_state1 = [0,0,0]
-    initial_state2 = [0,0,0]
-
-    # energy window for detector 1 and detector 2 to include state
-    energy_window1 = 1 * photon_energy_scale
-    energy_window2 = 1 * photon_energy_scale
-
-    # fixme : What is energy window for coupling ?
-    # energy window for coupling of states in detector 1 and detector 2.
-    energy_window_for_coupling_for_detector1 = 0
-    energy_window_for_coupling_for_detector2 = 0
-
+    # - -------  specify input paramter for full system  (photon + detector)  ----------------
+    # include state in full system (photon + detector) which satisfy energy condition  E - E_init <= energy window
     full_system_energy_window = 0
 
-    Detector_1_parameter = dof, frequency1, nmax1, initial_state1, energy_window1 , energy_window_for_coupling_for_detector1
-    Detector_2_parameter = dof, frequency2, nmax2, initial_state2, energy_window2 , energy_window_for_coupling_for_detector2
-    # -------------------- end setting up parameter for detector
-
-    # ------------------------------------- End specify parameter for full system and photon ----------
+    # ------------------------------------- End specify parameter for full system and photon & detector----------
 
     # ------- declare variable for Genetic algorithm simulation ---------------------
     population_size_over_all_process = 100
 
-    # divide population among differnt process and solve-problem by multiple process.
+    # divide population among differnt process and use parallel computing to speed up computation
     population_size = int(population_size_over_all_process / num_proc)
 
     # parameter for genetic algorithm. See  https://www.wikiwand.com/en/Genetic_algorithm
-
     generations = 20
     crossover_prob = 0.7
     mutation_prob = 0.01
     # ratio of population to be immigrated between population in different process
-    Immigration_ratio = 0.2
+    immigrate_population_ratio = 0.2
     # rate of immigration in genetic algorithm.
-    Immigration_rate = 0.1
+    immigration_rate = 0.1
 
     #  Initialize full system and construct first part of Hamiltonian.
     full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window, photon_energy, initial_photon_wavefunction )
     full_system_instance.construct_full_system_Hamiltonian_part1()
 
-    if(rank == 0):
     # print information about structure of system
-        full_system_instance.output_state_mode()
-        full_system_instance.detector1.output_detector_state_coupling()
-        full_system_instance.output_off_diagonal_coupling_mode_info()
-        print( "parameter number for detector1: "  + str(full_system_instance.detector1.offdiag_coupling_num) )
-        print( "parameter number for detector2: " + str(full_system_instance.detector2.offdiag_coupling_num) )
-        print( "paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiag_param_num -
-                                                                                    full_system_instance.detector1.offdiag_coupling_num -
-                                                                                    full_system_instance.detector2.offdiag_coupling_num))
+    if(rank == 0):
+        output_full_system_state_and_coupling_info(full_system_instance)
 
-
+    # parameter_number is number of parameter to be optimized in Genetic algorithm.
     parameter_number = full_system_instance.output_offdiagonal_parameter_number()
 
-    # Prepare seed_data for genetic algorithm
-    data = [coupling_strength , full_system_instance, parameter_number]
+    # Prepare parameter for genetic algorithm
+    param = [coupling_strength , full_system_instance, parameter_number , highest_peak_bool]
 
     # --------------------------------- End  prepare variable for Genetic algorithm simulation -------------------
 
-    # file
-    f2 = 0
-
-    if(rank == 0):
-        filename = 'info.txt'
-        filename = os.path.join(file_path,filename)
-        f2 = open(filename, 'w')
-        f2.write('population_size:  ' + str(population_size) + '\n')
-        f2.write('population_size_in_all_process:  ' + str(population_size_over_all_process) + '\n')
-        f2.write('number of process:  ' + str(num_proc) + '\n')
+    # info file for Genetic algorithm.
+    f2 = genetic_algorithm_info(file_path, population_size, population_size_over_all_process)
 
     # ---------------------- initialize Genetic algorithm and do Genetic algorithm ---------------------------------------
+    ga  = Extend_Genetic_algorithm(param, population_size = population_size, generations = generations, crossover_probability = crossover_prob, mutation_probability = mutation_prob,
+                                    elitism = True, maximise_fitness = True, immigration_ratio= immigrate_population_ratio , immigrantion_rate= immigration_rate , info_file = f2)
 
-    ga  = Extend_Genetic_algorithm(data, population_size = population_size, generations = generations, crossover_probability = crossover_prob, mutation_probability = mutation_prob,
-                                    elitism = True, maximise_fitness = True, immigration_ratio= Immigration_ratio , immigrantion_rate= Immigration_rate , info_file = f2)
-
+    # customized fitness function for genetic algorithm.
     ga.fitness_function = fitness_function
 
     ga.run()
 
     # ----------------- End of Genetic algorithm ----------------------------------------
-
     if(rank == 0):
         f2.close()
 
     # Evaluate simulation result.
-    Evaluate_simulation_result(ga, full_system_instance , file_path , population_size, coupling_strength , parameter_number)
+    Evaluate_simulation_result(ga, full_system_instance , file_path , population_size, coupling_strength , parameter_number , highest_peak_bool)
 
 
+def set_detector_param():
+    # ----------- parameter for detector ---------------------------
+    dof = 3
+    # -------------- parameter for d1 -------------------------
+    # frequency of detector's vib mode
+    frequency1 = np.array([1, 0.5, 0.25])
+    nmax1 = [1, 2, 4]
+    initial_d_state1 = [0, 0, 0]
+    # energy window for detector to include state around init state.
+    d1_energy_window = 1
+    # state couple to each other in detector should satisfy \Delta E <= state_coupling_energy_window
+    d1_state_coupling_energy_window = 0
+
+    # -------------- parameter for d2 ----------------
+    frequency2 = np.array([1, 0.5, 0.25])
+    nmax2 = [1, 2, 4]
+    initial_d_state2 = [0, 0, 0]
+    d2_energy_window = 1
+    d2_state_coupling_energy_window = 0
+
+    Detector_1_parameter = dof, frequency1, nmax1, initial_d_state1, d1_energy_window, d1_state_coupling_energy_window
+    Detector_2_parameter = dof, frequency2, nmax2, initial_d_state2, d2_energy_window, d2_state_coupling_energy_window
+    # -------------------- end setting up parameter for detector ----------------------------
+    return Detector_1_parameter, Detector_2_parameter
+
+def output_full_system_state_and_coupling_info(full_system_instance):
+    # print information about structure of system
+    full_system_instance.output_state_mode()
+    full_system_instance.detector1.output_detector_state_coupling()
+    full_system_instance.output_off_diagonal_coupling_mode_info()
+    print("parameter number for detector1: " + str(full_system_instance.detector1.offdiag_coupling_num))
+    print("parameter number for detector2: " + str(full_system_instance.detector2.offdiag_coupling_num))
+    print("paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiag_param_num -
+                                                                               full_system_instance.detector1.offdiag_coupling_num -
+                                                                               full_system_instance.detector2.offdiag_coupling_num))
+
+def genetic_algorithm_info(file_path, population_size, population_size_over_all_process):
+    # info file for Genetic algorithm.
+    f2 = 0
+
+    if (rank == 0):
+        filename = 'info.txt'
+        filename = os.path.join(file_path, filename)
+        f2 = open(filename, 'w')
+        f2.write('population_size:  ' + str(population_size) + '\n')
+        f2.write('population_size_in_all_process:  ' + str(population_size_over_all_process) + '\n')
+        f2.write('number of process:  ' + str(num_proc) + '\n')
+
+    return f2
 
 
 

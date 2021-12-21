@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib
 
 import matplotlib.pyplot as plt
-from include.Full_system_class import full_system
-from Fitness_function import Evolve_full_system_and_return_energy_change
+from include.full_system_class.Full_system_class import full_system
+from Fitness_function import simulate_full_system_energy_flow
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
@@ -53,7 +53,7 @@ def Plot_simulation_result():
 
     off_diagonal_coupling_list = np.array(off_diagonal_coupling_list) / 10
 
-    photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list  = Evolve_full_system_and_return_energy_change(full_system_instance , off_diagonal_coupling_list)
+    photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list  = simulate_full_system_energy_flow(full_system_instance, off_diagonal_coupling_list)
 
     # plot simulation result
     fig1, ax1 = plt.subplots(nrows=1, ncols=1)

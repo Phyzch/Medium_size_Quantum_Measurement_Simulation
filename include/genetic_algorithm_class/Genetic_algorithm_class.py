@@ -51,7 +51,7 @@ class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
         self.info_file = info_file
 
         # number and range of parameter to optimize.
-        param_range , _ ,  param_number = self.seed_data
+        param_range , _ ,  param_number , _ = self.seed_data
         self.param_range = param_range
         self.param_number = param_number
 

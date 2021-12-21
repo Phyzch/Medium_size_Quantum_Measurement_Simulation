@@ -55,7 +55,7 @@ class full_system():
         # system state is [00, 01, 10], thus system's state number is 3.
         self.photon_state_num = 3
         # energy of photon
-        self.photon_energy = photon_energy
+        self.init_photon_energy = photon_energy
         self.photon_state_energy = [0, photon_energy, photon_energy]
         self.photon_state_mode = [[0, 0], [1, 0], [0, 1]]
 
