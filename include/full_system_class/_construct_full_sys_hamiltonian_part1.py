@@ -161,27 +161,27 @@ def _construct_offdiag_dd_pd_coup(self):
         :param dj: column index in d matrix
         :return:
         '''
-        if (state_mode_list[di][0] == state_mode_list[dj][0]):
-            same = True
-            for k in range(1, d_dof):
-                if (state_mode_list[di][k] != state_mode_list[dj][k]):
-                    same = False
-                    break
+        if(state_mode_list[di][0] - state_mode_list[dj][0] == 1 ):
+                same = True
+                for k in range(1, d_dof):
+                    if (state_mode_list[di][k] != state_mode_list[dj][k]):
+                        same = False
+                        break
 
-            if (same):
-                # include this coupling in matrix and irow, icol.
-                self.offdiag_param_num = self.offdiag_param_num + 1
-                # As irow, icol for Hamiltonian will not change during Genetic algorithm (only value of coupling will change, we construct irow , icol here)
-                self.full_H.irow.append(i)
-                self.full_H.icol.append(j)
-                # lower triangular part.
-                self.full_H.irow.append(j)
-                self.full_H.icol.append(i)
+                if (same):
+                    # include this coupling in matrix and irow, icol.
+                    self.offdiag_param_num = self.offdiag_param_num + 1
+                    # As irow, icol for Hamiltonian will not change during Genetic algorithm (only value of coupling will change, we construct irow , icol here)
+                    self.full_H.irow.append(i)
+                    self.full_H.icol.append(j)
+                    # lower triangular part.
+                    self.full_H.irow.append(j)
+                    self.full_H.icol.append(i)
 
-                self.pd_dd_coupling_irow.append(i)
-                self.pd_dd_coupling_icol.append(j)
+                    self.pd_dd_coupling_irow.append(i)
+                    self.pd_dd_coupling_icol.append(j)
 
-                pd_coupling_num = pd_coupling_num + 1
+                    pd_coupling_num = pd_coupling_num + 1
 
         return pd_coupling_num
 
@@ -244,6 +244,7 @@ def _construct_offdiag_dd_pd_coup(self):
             dj1 = self.dstate1[j]
             dj2 = self.dstate2[j]
 
+
             # no coupling between photon state [0,1] & [1,0]
             if (self.sstate[i] + self.sstate[j] == 3):
                 ss = -3
@@ -262,6 +263,9 @@ def _construct_offdiag_dd_pd_coup(self):
             # coupling between detector1 and detector2
             if (ss == 0 and di1 != dj1 and di2 != dj2):
                 dd_coupling_num = include_dd_coupling(di1, dj1, di2, dj2, dd_coupling_num)
+
+    self.pd_coupling_num = pd_coupling_num
+    self.dd_coupling_num = dd_coupling_num
 
 def _insert_upper_lower_triangular_index(recv_H, input_H):
     '''

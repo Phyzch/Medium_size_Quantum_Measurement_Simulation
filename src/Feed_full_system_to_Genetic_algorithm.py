@@ -15,7 +15,7 @@ import os
 
 
 def Implement_genetic_algorithm(file_path):
-    coupling_parameter_range = 0.01
+    coupling_parameter_range = 0.1
     highest_peak_bool = True
 
     # --------------- parameter for photon ------------
@@ -108,15 +108,16 @@ def set_detector_param():
     return Detector_1_parameter, Detector_2_parameter
 
 def output_full_system_state_and_coupling_info(full_system_instance):
-    # print information about structure of system
-    full_system_instance.output_state_mode()
-    full_system_instance.detector1.output_detector_state_coupling()
-    full_system_instance.output_off_diagonal_coupling_mode_info()
-    print("parameter number for detector1: " + str(full_system_instance.detector1.offdiag_coupling_num))
-    print("parameter number for detector2: " + str(full_system_instance.detector2.offdiag_coupling_num))
-    print("paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiag_param_num -
-                                                                               full_system_instance.detector1.offdiag_coupling_num -
-                                                                               full_system_instance.detector2.offdiag_coupling_num))
+    if(rank == 0):
+        # print information about structure of system
+        full_system_instance.output_state_mode()
+        full_system_instance.detector1.output_detector_state_coupling()
+        full_system_instance.output_off_diagonal_coupling_mode_info()
+        print("parameter number for detector1: " + str(full_system_instance.detector1.offdiag_coupling_num))
+        print("parameter number for detector2: " + str(full_system_instance.detector2.offdiag_coupling_num))
+        print("paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiag_param_num -
+                                                                                   full_system_instance.detector1.offdiag_coupling_num -
+                                                                                   full_system_instance.detector2.offdiag_coupling_num))
 
 def genetic_algorithm_info(file_path, population_size, population_size_over_all_process):
     # info file for Genetic algorithm.

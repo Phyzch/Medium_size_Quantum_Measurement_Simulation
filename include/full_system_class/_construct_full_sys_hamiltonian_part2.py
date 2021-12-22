@@ -77,7 +77,7 @@ def _construct_full_system_offdiag_coupling(self):
 
     # coupling in detector2
     intra_d2_coupling_num = len(self.d2_coupling_H.irow)
-    construct_intra_d_coup(intra_d2_coupling_num, self.d2_coupling_dmat_index, self.detector2.d_H.dmat, self.d2_H)
+    construct_intra_d_coup(intra_d2_coupling_num, self.d2_coupling_dmat_index, self.detector2.d_H.mat, self.d2_H)
 
 
 

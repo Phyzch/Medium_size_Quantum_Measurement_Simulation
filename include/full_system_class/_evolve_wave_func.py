@@ -56,7 +56,7 @@ def Evolve_dynamics(self):
 
     # define time step to do simulation
     max_H_element = np.max(np.abs(self.full_H.mat))
-    time_step = 0.1 / (max_H_element)
+    time_step = 0.02 / (max_H_element)
 
     # output step number and total_step_number
     output_step_number = max(int(output_time_step / time_step), 1)
@@ -117,7 +117,7 @@ def Evolve_dynamics(self):
     Time_list = np.array(Time_list)
 
     # check energy conservation
-    check_energy_conservation(time_step, Time_list, d1_energy_list, d2_energy_list, photon_energy_list)
+    # check_energy_conservation(time_step, Time_list, d1_energy_list, d2_energy_list, photon_energy_list)
 
     return photon_energy_list, d1_energy_list, d2_energy_list, Time_list
 

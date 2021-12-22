@@ -2,7 +2,7 @@ import numpy as np
 import os
 
 import matplotlib.pyplot as plt
-import matplotlib
+import matplotlib.gridspec as gridspec
 from Fitness_function import simulate_full_system_energy_flow, Analyze_peak_and_peak_duration
 
 from include.full_system_class.Full_system_class import full_system
@@ -20,13 +20,13 @@ def set_detector_param():
     nmax1 = [1, 2, 4]
     initial_d_state1 = [0, 0, 0]
     d1_energy_window = 1
-    d1_state_coupling_energy_window = 0
+    d1_state_coupling_energy_window = 10000   # no constraint now
 
     frequency2 = np.array([1, 0.5, 0.25])
     nmax2 = [1, 2, 4]
     initial_d_state2 = [0, 0, 0]
     d2_energy_window = 1
-    d2_state_coupling_energy_window = 0
+    d2_state_coupling_energy_window = 10000 # no constraint now.
 
     Detector_1_parameter = dof, frequency1, nmax1, initial_d_state1, d1_energy_window , d1_state_coupling_energy_window
     Detector_2_parameter = dof, frequency2, nmax2, initial_d_state2, d2_energy_window , d2_state_coupling_energy_window
@@ -34,14 +34,17 @@ def set_detector_param():
     return Detector_1_parameter , Detector_2_parameter
 
 def Analyze_Born_rule(file_path):
+    # preview : True, see wave function figure. False, do batch simulation
+    # before do batch simulation, we should preview simulation result and change time step, simulation time , coupling strength etc.
+    preview = False
 
     # use highest peak as criteria for localization.
-    highest_peak_bool = True
+    highest_peak_bool = False
 
     iteration_number = 100
 
     # parameter_range is range for coupling strength we set in Hamiltonian.
-    coupling_parameter_range = 0.05
+    coupling_parameter_range = 0.01
 
     # ----------- parameter for photon ---------------------
     photon_energy = 1
@@ -75,31 +78,63 @@ def Analyze_Born_rule(file_path):
     iteration_number_per_core = int (iteration_number / num_proc)
     iteration_number = iteration_number_per_core * num_proc
 
-    for i in range(iteration_number_per_core):
-        # randomly generate parameter according to coupling_parameter_range:
+    if(preview):
+        plot_trail_simulation_result(full_system_instance, coupling_parameter_range, parameter_number)
+    else:
+        for i in range(iteration_number_per_core):
+            # randomly generate parameter according to coupling_parameter_range:
+            coupling_param = np.random.normal(0, coupling_parameter_range, parameter_number).tolist()
+            assert(type(coupling_param) == list )
+
+            photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_energy_flow(full_system_instance, coupling_param)
+
+            _, max_energy_change, _, localization_bool = Analyze_peak_and_peak_duration(
+                d1_energy_list_change, d2_energy_list_change, time_list , highest_peak_bool= highest_peak_bool)
+
+            if(localization_bool == 1):
+                left_localization_num = left_localization_num + 1
+
+            if (localization_bool == 2 ):
+                right_localization_num = right_localization_num + 1
+
+            parameter_list.append(coupling_param)
+            max_energy_change_list.append(max_energy_change)
+            localization_side_list.append(localization_bool)
+
+        # Broadcast data to all process.
+        parameter_list = Broadcast_data(parameter_list , num_proc )
+        max_energy_change_list = Broadcast_data(max_energy_change_list , num_proc)
+        localization_side_list = Broadcast_data(localization_side_list , num_proc )
+
+        Analyze_Localization_prob( max_energy_change_list, localization_side_list, parameter_list, initial_photon_wavefunction, iteration_number_per_core, iteration_number, file_path)
+
+
+def plot_trail_simulation_result(full_system_instance, coupling_parameter_range, parameter_number ):
+    if rank == 0:
         coupling_param = np.random.normal(0, coupling_parameter_range, parameter_number).tolist()
-        assert(type(coupling_param) == list )
 
-        photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_energy_flow(full_system_instance, coupling_param)
+        photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_energy_flow(
+            full_system_instance, coupling_param)
 
-        _, max_energy_change, _, localization_bool = Analyze_peak_and_peak_duration(
-            d1_energy_list_change, d2_energy_list_change, time_list , highest_peak_bool= highest_peak_bool)
+        tot_energy = photon_energy_list + d1_energy_list_change + d2_energy_list_change
 
-        if(localization_bool == 1):
-            left_localization_num = left_localization_num + 1
-        else:
-            right_localization_num = right_localization_num + 1
+        #configure figure
+        fig = plt.figure(figsize=(20, 10))
+        spec = gridspec.GridSpec(nrows=1, ncols=1, figure=fig)
+        spec.update(hspace=0.5, wspace=0.3)
+        ax = fig.add_subplot(spec[0, 0])
 
-        parameter_list.append(coupling_param)
-        max_energy_change_list.append(max_energy_change)
-        localization_side_list.append(localization_bool)
+        ax.plot(time_list, photon_energy_list , color = 'orange' , label = '$E_{p}$')
+        ax.plot(time_list , d1_energy_list_change , color = 'blue' , label = '$E_{l}$')
+        ax.plot(time_list, d2_energy_list_change , color = 'green' , label = '$E_{r}$')
+        ax.plot(time_list, tot_energy , color = 'red' , label = '$E_{tot}$')
 
-    # Broadcast data to all process.
-    parameter_list = Broadcast_data(parameter_list , num_proc )
-    max_energy_change_list = Broadcast_data(max_energy_change_list , num_proc)
-    localization_side_list = Broadcast_data(localization_side_list , num_proc )
+        ax.legend(loc = 'best')
+        ax.set_xlabel('time')
+        ax.set_ylabel('E')
+        ax.set_title('energy exchange')
 
-    Analyze_Localization_prob( max_energy_change_list, localization_side_list, parameter_list, initial_photon_wavefunction, iteration_number_per_core, iteration_number, file_path)
+        plt.show()
 
 
 def Analyze_Localization_prob( max_energy_change_list, localization_side_list, parameter_list, psi0, iteration_number_per_core, iteration_number, file_path):

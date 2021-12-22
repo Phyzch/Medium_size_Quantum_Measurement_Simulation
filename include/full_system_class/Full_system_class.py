@@ -17,8 +17,8 @@ To use this class:
 
 
 class full_system():
-    Time_duration = 50000
-    output_time_step = 100
+    Time_duration = 5000
+    output_time_step = 10
 
     #  ----------- import method. ---------------
     from ._construct_full_sys_hamiltonian_part1 import construct_full_system_Hamiltonian_part1, \
@@ -81,10 +81,12 @@ class full_system():
         self.d2_coupling_H = Hamiltonian()
         self.d2_coupling_dmat_index = []
 
-        # coupling index between detector and system. also between detector and detector.
+        # coupling index between detector and photon. also between detector and detector.
         self.pd_dd_coupling_irow = []
         self.pd_dd_coupling_icol = []
-
+        # coupling number between photon & detector. also between detector and detector.
+        self.pd_coupling_num = 0
+        self.dd_coupling_num = 0
 
         # wave function:
         self.photon_wave_func = np.zeros(self.photon_state_num)
@@ -100,6 +102,7 @@ class full_system():
 
         # Hamiltonian solely for detectro2 in full matrix
         self.d2_H = Hamiltonian()
+
 
 
 
