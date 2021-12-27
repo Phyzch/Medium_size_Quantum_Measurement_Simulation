@@ -41,14 +41,14 @@ def Analyze_Born_rule(file_path):
     # use highest peak as criteria for localization.
     highest_peak_bool = False
 
-    iteration_number = 100
+    iteration_number = 1000
 
     # parameter_range is range for coupling strength we set in Hamiltonian.
     coupling_parameter_range = 0.01
 
     # ----------- parameter for photon ---------------------
     photon_energy = 1
-    initial_photon_wavefunction = [np.sqrt(1) / np.sqrt(4), np.sqrt(3) / np.sqrt(4)]
+    initial_photon_wavefunction = [np.sqrt(1) / np.sqrt(3), np.sqrt(2) / np.sqrt(3)]
 
     # -------- parameter for detector -----------
     Detector_1_parameter, Detector_2_parameter = set_detector_param()
