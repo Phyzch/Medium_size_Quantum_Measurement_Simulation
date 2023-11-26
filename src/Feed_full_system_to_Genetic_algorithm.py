@@ -5,7 +5,7 @@ from include.full_system_class.Full_system_class import full_system
 
 from include.genetic_algorithm_class.Genetic_algorithm_class import Extend_Genetic_algorithm
 from Fitness_function import fitness_function , simulate_full_system_energy_flow, Analyze_peak_and_peak_duration , fit_func1 , compute_coupling_geometric_mean
-
+import matplotlib.gridspec as gridspec
 from include.util import Broadcast_data
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
@@ -182,7 +182,10 @@ def Evaluate_simulation_result( *args ):
 def plot_simulation_result(*args):
     photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list, file_path = args
     # configure fig, ax
-    fig1, ax1 = plt.subplots(nrows=1, ncols=1)
+    fig1 = plt.figure(figsize=(15, 15))
+    spec = gridspec.GridSpec(nrows=1, ncols=1, figure=fig1)
+    spec.update(hspace=0.5, wspace=0.3)
+    ax1 = fig1.add_subplot(spec[0, 0])
     ax1.plot(Time_list, d1_energy_list_change, label='left photon localization')
     ax1.plot(Time_list, d2_energy_list_change, label='right photon localization')
     ax1.plot(Time_list, photon_energy_list, label='photon energy')
