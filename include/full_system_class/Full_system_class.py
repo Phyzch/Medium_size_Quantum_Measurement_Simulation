@@ -68,7 +68,7 @@ class full_system():
         self.offdiag_param_num = 0
         # off diagonal parameter : 1. parameter for intra-detector coupling  2. coupling between detectors.
         self.offdiag_param_list = []
-        # offdiagonal parameter : 1. between system and detector and 2.between detector and detector.
+        # off_diagonal_parameter : 1. between system and detector and 2.between detector and detector.
         self.pd_dd_offdiag_param = []
 
         # full_H : full_Hamiltonian for (photon + detector)
@@ -100,7 +100,7 @@ class full_system():
         # Hamiltonian solely for detector1 in full matrix
         self.d1_H = Hamiltonian()
 
-        # Hamiltonian solely for detectro2 in full matrix
+        # Hamiltonian solely for detectror2 in full matrix
         self.d2_H = Hamiltonian()
 
 

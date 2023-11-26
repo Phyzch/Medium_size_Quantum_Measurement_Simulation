@@ -36,7 +36,8 @@ def set_detector_param():
 def Analyze_Born_rule(file_path):
     # preview : True, see wave function figure. False, do batch simulation
     # before do batch simulation, we should preview simulation result and change time step, simulation time , coupling strength etc.
-    preview = False
+    preview = True
+    save_preview_bool = True
 
     # use highest peak as criteria for localization.
     highest_peak_bool = False
@@ -79,7 +80,7 @@ def Analyze_Born_rule(file_path):
     iteration_number = iteration_number_per_core * num_proc
 
     if(preview):
-        plot_trail_simulation_result(full_system_instance, coupling_parameter_range, parameter_number)
+        plot_trail_simulation_result(full_system_instance, coupling_parameter_range, parameter_number, file_path, save_preview_bool)
     else:
         for i in range(iteration_number_per_core):
             # randomly generate parameter according to coupling_parameter_range:
@@ -109,7 +110,7 @@ def Analyze_Born_rule(file_path):
         Analyze_Localization_prob( max_energy_change_list, localization_side_list, parameter_list, initial_photon_wavefunction, iteration_number_per_core, iteration_number, file_path)
 
 
-def plot_trail_simulation_result(full_system_instance, coupling_parameter_range, parameter_number ):
+def plot_trail_simulation_result(full_system_instance, coupling_parameter_range, parameter_number, file_path, save_preview_bool ):
     if rank == 0:
         coupling_param = np.random.normal(0, coupling_parameter_range, parameter_number).tolist()
 
@@ -133,6 +134,12 @@ def plot_trail_simulation_result(full_system_instance, coupling_parameter_range,
         ax.set_xlabel('time')
         ax.set_ylabel('E')
         ax.set_title('energy exchange')
+
+        if save_preview_bool:
+            fig_name = "quantum measurement process preview.svg"
+            fig_path = os.path.join(file_path, fig_name)
+
+            fig.savefig(fig_path)
 
         plt.show()
 

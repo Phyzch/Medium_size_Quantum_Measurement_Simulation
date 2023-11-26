@@ -34,7 +34,7 @@ def Implement_genetic_algorithm(file_path):
     # ------- declare variable for Genetic algorithm simulation ---------------------
     population_size_over_all_process = 100
 
-    # divide population among differnt process and use parallel computing to speed up computation
+    # divide population among different processes and use parallel computing to speed up computation
     population_size = int(population_size_over_all_process / num_proc)
 
     # parameter for genetic algorithm. See  https://www.wikiwand.com/en/Genetic_algorithm

@@ -1,9 +1,10 @@
 import sys
-
-add_sys_path_list = ["/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/" , "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/src/" ,
-                     "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/include/detector_class/",
-                     "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/include/full_system_class/",
-                     "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/include/genetic_algorithm_class/"]
+import os
+home_directory = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/"
+add_sys_path_list = [home_directory , os.path.join(home_directory , "src" )  ,
+                     os.path.join(home_directory , "include/detector_class/"),
+                     os.path.join(home_directory , "include/full_system_class/") ,
+                     os.path.join(home_directory , "include/genetic_algorithm_class/")]
 
 sys.path = sys.path + add_sys_path_list
 
@@ -25,12 +26,11 @@ def main():
 
     # print_sys_path_info()
 
-    # file_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Genetic_algorithm/3_mode/"
-    # Implement_genetic_algorithm(file_path)
+    file_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Genetic_algorithm/try/"
+    Implement_genetic_algorithm(file_path)
 
-
-    Analyze_Born_rule_file_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Born_rule/try/"
-    Analyze_Born_rule(Analyze_Born_rule_file_path)
+    # Analyze_Born_rule_file_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Born_rule/try/"
+    # Analyze_Born_rule(Analyze_Born_rule_file_path)
 
 def print_sys_path_info():
     print(sys.path)

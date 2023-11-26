@@ -12,6 +12,8 @@ def construct_offdiag_mat(self, offdiag_coupling_element_list):
 
     # read off diagonal coupling element.
     self.offdiag_coupling_element_list = offdiag_coupling_element_list.copy()
+    self.offdiag_coupling_element_list = self.offdiag_coupling_element_list.tolist()
+
     # construct offdiagonal coupling element
     if( len(self.offdiag_coupling_element_list) != self.offdiag_coupling_num ):
         raise NameError('offdiagonal coupling element input from Genetic_algorithm does not have right length')
