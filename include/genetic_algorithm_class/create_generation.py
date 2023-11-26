@@ -65,12 +65,12 @@ def create_new_population(self):
         can_mutate = random.random() < self.mutation_probability
 
         if can_crossover:
-            child_1.genes, child_2.genes = self.crossover_function(
+            child_1.genes, child_2.genes = self.crossover_function1(
                 parent_1.genes, parent_2.genes)
 
         if can_mutate:
-            self.mutate_function(child_1.genes)
-            self.mutate_function(child_2.genes)
+            self.mutate_function1(child_1.genes)
+            self.mutate_function1(child_2.genes)
 
         append_individual_in_new_population(child_1, new_population, new_population_gene, can_mutate, can_crossover)
 

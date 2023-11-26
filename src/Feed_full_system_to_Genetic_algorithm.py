@@ -138,11 +138,11 @@ def Evaluate_simulation_result( *args ):
 
     # ------------------  Evaluate result of Genetic algorithm ----------------------
 
-    # output last generations and their fitfunction.
-    last_generation = ga.last_generation()
+    # output last generations and their fitfunction.  (chromosome type)
+    last_generation = ga.current_generation
     # (member.fitness, member.genes)
-    last_generation_fitness_func = [member[0] for member in last_generation]
-    last_generation_param = [member[1] for member in last_generation]
+    last_generation_fitness_func = [member.fitness for member in last_generation]
+    last_generation_param = [member.genes for member in last_generation]
 
     # Broadcast fitness function and paramter to all process
     parameter_for_all = Broadcast_data(last_generation_param , num_proc )
@@ -193,7 +193,7 @@ def plot_simulation_result(*args):
     ax1.legend(loc='best')
 
     # save figure.
-    fig_name = "best_simulation_result.png"
+    fig_name = "best_simulation_result.svg"
     fig_name = os.path.join(file_path, fig_name)
 
     fig1.savefig(fig_name)

@@ -16,8 +16,9 @@ class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
     from create_generation import create_first_generation, create_next_generation, create_initial_population, \
         create_new_population, create_individual_gene
     from immigrate import immigrate_population, shuffle_genetic_data
-    from mutate_crossover import  mutate_function, crossover_function
+    from mutate_crossover import  mutate_function1, crossover_function1
     from fitness_func import calculate_population_fitness
+
 
     def __init__(self,
                  seed_data,
@@ -54,6 +55,8 @@ class Extend_Genetic_algorithm(pyeasyga.GeneticAlgorithm):
         param_range , _ ,  param_number , _ = self.seed_data
         self.param_range = param_range
         self.param_number = param_number
+
+
 
 
     def run(self):
