@@ -17,9 +17,6 @@ To use this class:
 
 
 class full_system():
-    Time_duration = 5000
-    output_time_step = 10
-
     #  ----------- import method. ---------------
     from ._construct_full_sys_hamiltonian_part1 import construct_full_system_Hamiltonian_part1, \
         _construct_full_system_diagonal_Hamiltonian, _construct_offdiag_dd_pd_coup, _compute_initial_energy, \
@@ -32,8 +29,11 @@ class full_system():
         _evaluate_photon_energy
     # ----------------------------------------------------
 
-    def __init__(self, Detector_1_parameter, Detector_2_parameter, energy_window, photon_energy, initial_photon_wave_function):
+    def __init__(self, Detector_1_parameter, Detector_2_parameter, energy_window, photon_energy, initial_photon_wave_function,Time_duration = 5000, output_time_step = 10):
         # energy window for full matrix is passed through parameter directly here.
+
+        self.Time_duration = Time_duration
+        self.output_time_step = output_time_step
 
         # we have three energy windows. energy_window for each detector is contained in detector_parameter.
         self.detector1 = detector( *Detector_1_parameter)

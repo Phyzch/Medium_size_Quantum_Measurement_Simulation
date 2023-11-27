@@ -95,8 +95,9 @@ def Analyze_peak_and_peak_duration(e2l_change, e2r_change, time , highest_peak_b
     # if we use first peak instead of highest peak as criteria. (highest_peak_bool == False)
     # We first find highest peak.
     # Then set ratio * highest peak as threashould to be treated as a peak. Then we find earliest peak in simulation.
-    peak_criteria_ratio = 0.8
+    peak_criteria_ratio = 0.7
     criteria_for_peak = peak_criteria_ratio * max_energy_change
+
 
     e2l_change_peak_index = [i for i in range(len(e2l_change)) if e2l_change[i] > criteria_for_peak]
     e2r_change_peak_index = [i for i in range(len(e2r_change)) if e2r_change[i] > criteria_for_peak]
@@ -182,11 +183,11 @@ def fit_func1(first_peak_Time_duration_ratio, max_energy_change, Localization_du
     # ratio of first peak duration. scaled by geometric mean value of parameter as t~1/V, we want to avoid optimized to small parameter.
     scaled_first_peak_time_duration_ratio = first_peak_Time_duration_ratio  * parameter_geometric_mean_ratio
 
-    max_energy_fitness_contribution = 0.5 * pow(max_energy_change, 2 )
+    max_energy_fitness_contribution = 10 * pow(max_energy_change, 2)
 
-    localization_duration_ratio_contribution = 1 * pow(Localization_duration_ratio , 2)
+    localization_duration_ratio_contribution = 0.5 * pow(Localization_duration_ratio , 2)
 
-    first_peak_duration_contribution = scaled_first_peak_time_duration_ratio * 6
+    first_peak_duration_contribution = pow(scaled_first_peak_time_duration_ratio, 2)* 5
 
     fitness_func_value = max_energy_fitness_contribution + localization_duration_ratio_contribution + first_peak_duration_contribution
 

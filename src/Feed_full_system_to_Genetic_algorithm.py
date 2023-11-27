@@ -15,7 +15,7 @@ import os
 
 
 def Implement_genetic_algorithm(file_path):
-    coupling_parameter_range = 0.1
+    coupling_parameter_range = 0.01  # this decide the time scale for localization
     highest_peak_bool = True
 
     # --------------- parameter for photon ------------
@@ -32,13 +32,13 @@ def Implement_genetic_algorithm(file_path):
     # ------------------------------------- End specify parameter for full system and photon & detector----------
 
     # ------- declare variable for Genetic algorithm simulation ---------------------
-    population_size_over_all_process = 100
+    population_size_over_all_process = 400
 
     # divide population among different processes and use parallel computing to speed up computation
     population_size = int(population_size_over_all_process / num_proc)
 
     # parameter for genetic algorithm. See  https://www.wikiwand.com/en/Genetic_algorithm
-    generations = 20
+    generations = 40
     crossover_prob = 0.7
     mutation_prob = 0.01
     # ratio of population to be immigrated between population in different process
@@ -46,8 +46,12 @@ def Implement_genetic_algorithm(file_path):
     # rate of immigration in genetic algorithm.
     immigration_rate = 0.1
 
+    # Time for simulation
+    Time_duration = 5000
+    output_time_step = 10
+
     #  Initialize full system and construct first part of Hamiltonian.
-    full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window, photon_energy, initial_photon_wavefunction )
+    full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window, photon_energy, initial_photon_wavefunction , Time_duration = Time_duration, output_time_step = output_time_step)
     full_system_instance.construct_full_system_Hamiltonian_part1()
 
     # print information about structure of system
@@ -83,12 +87,12 @@ def Implement_genetic_algorithm(file_path):
 
 def set_detector_param():
     # ----------- parameter for detector ---------------------------
-    dof = 3
+    dof = 4
     # -------------- parameter for d1 -------------------------
     # frequency of detector's vib mode
-    frequency1 = np.array([1, 0.5, 0.25])
-    nmax1 = [1, 2, 4]
-    initial_d_state1 = [0, 0, 0]
+    frequency1 = np.array([1, 0.5, 0.25, 0.125])
+    nmax1 = [1, 2, 4, 8]
+    initial_d_state1 = [0, 0, 0, 0]
     # energy window for detector to include state around init state.
     d1_energy_window = 1
     # state couple to each other in detector should satisfy \Delta E <= state_coupling_energy_window.
@@ -96,9 +100,9 @@ def set_detector_param():
     d1_state_coupling_energy_window = 0
 
     # -------------- parameter for d2 ----------------
-    frequency2 = np.array([1, 0.5, 0.25])
-    nmax2 = [1, 2, 4]
-    initial_d_state2 = [0, 0, 0]
+    frequency2 = np.array([1, 0.5, 0.25, 0.125])
+    nmax2 = [1, 2, 4, 8]
+    initial_d_state2 = [0, 0, 0, 0]
     d2_energy_window = 1
     d2_state_coupling_energy_window = 0
 
