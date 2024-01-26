@@ -1,6 +1,8 @@
 import sys
 import os
+
 home_directory = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/"
+# add search directory path to sys.path.
 add_sys_path_list = [home_directory , os.path.join(home_directory , "src" )  ,
                      os.path.join(home_directory , "include/detector_class/"),
                      os.path.join(home_directory , "include/full_system_class/") ,

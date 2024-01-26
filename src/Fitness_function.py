@@ -4,7 +4,7 @@ from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 num_proc = comm.Get_size()
-from include.full_system_class.Full_system_class import full_system
+from include.full_system_class.__init__ import full_system
 
 def extract_first_peak(list):
     # extract list of consecutive number from list as set this as first peak.
@@ -183,11 +183,11 @@ def fit_func1(first_peak_Time_duration_ratio, max_energy_change, Localization_du
     # ratio of first peak duration. scaled by geometric mean value of parameter as t~1/V, we want to avoid optimized to small parameter.
     scaled_first_peak_time_duration_ratio = first_peak_Time_duration_ratio  * parameter_geometric_mean_ratio
 
-    max_energy_fitness_contribution = 10 * pow(max_energy_change, 2)
+    max_energy_fitness_contribution = 0.5 * pow(max_energy_change, 2)
 
-    localization_duration_ratio_contribution = 0.5 * pow(Localization_duration_ratio , 2)
+    localization_duration_ratio_contribution = 10 * pow(Localization_duration_ratio , 2)
 
-    first_peak_duration_contribution = pow(scaled_first_peak_time_duration_ratio, 2)* 5
+    first_peak_duration_contribution = scaled_first_peak_time_duration_ratio * 20
 
     fitness_func_value = max_energy_fitness_contribution + localization_duration_ratio_contribution + first_peak_duration_contribution
 

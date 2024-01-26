@@ -1,6 +1,6 @@
 import numpy as np
 
-from include.detector_class.Detector_class import detector
+from include.detector_class.__init__ import Detector
 from include.Hamiltonian_class import Hamiltonian
 
 
@@ -36,8 +36,8 @@ class full_system():
         self.output_time_step = output_time_step
 
         # we have three energy windows. energy_window for each detector is contained in detector_parameter.
-        self.detector1 = detector( *Detector_1_parameter)
-        self.detector2 = detector( *Detector_2_parameter )
+        self.detector1 = Detector(*Detector_1_parameter)
+        self.detector2 = Detector(*Detector_2_parameter)
 
         # initial wave function for photon
         self.initial_photon_wave_function = initial_photon_wave_function

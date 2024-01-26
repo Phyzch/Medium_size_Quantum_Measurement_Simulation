@@ -1,6 +1,6 @@
 import numpy as np
-from include.detector_class.Detector_class import detector
-from include.Constructing_state_module import binary_search_mode_list
+from include.detector_class.__init__ import Detector
+from include.Constructing_state_module import binary_search_qn_list
 
 '''
 first part of construcing Hamiltonian. This only have to be called once.
@@ -27,8 +27,8 @@ def construct_full_system_Hamiltonian_part1(self):
 
 def _compute_initial_energy(self):
     self.initial_energy = 0
-    d1_energy = np.sum(np.array(self.detector1.frequency) * np.array(self.detector1.initial_state))
-    d2_energy = np.sum(np.array(self.detector2.frequency) * np.array(self.detector2.initial_state))
+    d1_energy = np.sum(np.array(self.detector1._frequency) * np.array(self.detector1._initial_state_qn))
+    d2_energy = np.sum(np.array(self.detector2._frequency) * np.array(self.detector2._initial_state_qn))
 
     self.initial_energy = self.init_photon_energy + d1_energy + d2_energy
 
@@ -39,46 +39,46 @@ def _construct_full_system_diagonal_Hamiltonian(self):
     impose energy window : states included should satisfy : |E - E_init | <= energy_window
     :return:
     '''
-    self.state_num = 0
+    self._basis_set_state_num = 0
     for i in range(self.photon_state_num):
-        for j in range(self.detector1.state_num):
-            for k in range(self.detector2.state_num):
-                energy = self.photon_state_energy[i] + self.detector1.state_energy_list[j] + \
-                         self.detector2.state_energy_list[k]
+        for j in range(self.detector1._basis_set_state_num):
+            for k in range(self.detector2._basis_set_state_num):
+                energy = self.photon_state_energy[i] + self.detector1._basis_set_state_energy_list[j] + \
+                         self.detector2._basis_set_state_energy_list[k]
 
                 if (abs(energy - self.initial_energy) <= self.energy_window):
                     self.sstate.append(i)
                     self.dstate1.append(j)
                     self.dstate2.append(k)
 
-                    state_mode = [self.photon_state_mode[i], self.detector1.state_mode_list[j].tolist(),
-                                  self.detector2.state_mode_list[k].tolist()]
-                    self.state_mode_list.append(state_mode)
+                    state_mode = [self.photon_state_mode[i], self.detector1._basis_set_state_qn_list[j].tolist(),
+                                  self.detector2._basis_set_state_qn_list[k].tolist()]
+                    self._basis_set_state_qn_list.append(state_mode)
 
                     # Hamiltonian for H
-                    self.full_H.append(energy, self.state_num, self.state_num)
+                    self.full_H.append(energy, self._basis_set_state_num, self._basis_set_state_num)
 
                     # Hamiltonian for photon, d1, d2
-                    self.photon_H.append(self.photon_state_energy[i], self.state_num, self.state_num)
-                    self.d1_H.append(self.detector1.state_energy_list[j], self.state_num, self.state_num)
-                    self.d2_H.append(self.detector2.state_energy_list[k], self.state_num, self.state_num)
+                    self.photon_H.append(self.photon_state_energy[i], self._basis_set_state_num, self._basis_set_state_num)
+                    self.d1_H.append(self.detector1._basis_set_state_energy_list[j], self._basis_set_state_num, self._basis_set_state_num)
+                    self.d2_H.append(self.detector2._basis_set_state_energy_list[k], self._basis_set_state_num, self._basis_set_state_num)
 
-                    self.state_num = self.state_num + 1
+                    self._basis_set_state_num = self._basis_set_state_num + 1
 
     # shift Hamiltonian's diag part by initial energy to speed up propagation of wave function.
     self._Shift_Hamiltonian()
 
     # diagonal part of Hamiltonian. No coupling.
-    self.full_H.diag_mat = self.full_H.mat.copy()
-    self.d1_H.diag_mat = self.d1_H.mat.copy()
-    self.d2_H.diag_mat = self.d2_H.mat.copy()
+    self.full_H._diagonal_mat = self.full_H._mat.copy()
+    self.d1_H._diagonal_mat = self.d1_H._mat.copy()
+    self.d2_H._diagonal_mat = self.d2_H._mat.copy()
 
 def _Shift_Hamiltonian(self):
     '''
     shift Hamiltonian by energy : <\psi | H | \psi>
     '''
-    for i in range(self.state_num):
-        self.full_H.mat[i] = self.full_H.mat[i] - self.initial_energy
+    for i in range(self._basis_set_state_num):
+        self.full_H._mat[i] = self.full_H._mat[i] - self.initial_energy
 
 def _construct_intra_detector_coupling(self):
     # -------------- inline function -------
@@ -101,22 +101,22 @@ def _construct_intra_detector_coupling(self):
             # k is off-diagonal matrix index in detector's Hamiltonian
             if (dirow[k] == di and dicol[k] == dj):
                 # d_coupling only record intra-detector coupling matrix index
-                d_coupling_H.irow.append(i)
-                d_coupling_H.icol.append(j)
+                d_coupling_H._irow.append(i)
+                d_coupling_H._icol.append(j)
                 d_coupling_dmat_index.append(k)
 
                 # d_irwo ,  dicol
-                dmat_H.irow.append(i)
-                dmat_H.icol.append(j)
+                dmat_H._irow.append(i)
+                dmat_H._icol.append(j)
 
-                dmat_H.irow.append(j)
-                dmat_H.icol.append(i)
+                dmat_H._irow.append(j)
+                dmat_H._icol.append(i)
                 break
 
     # --------------- inline function -------------------------------------
 
-    for i in range(self.state_num):
-        for j in range(i + 1, self.state_num):
+    for i in range(self._basis_set_state_num):
+        for j in range(i + 1, self._basis_set_state_num):
             ss = self.sstate[i] - self.sstate[j]
 
             # i , j stands for different state.  1, 2 stand for detector 1 and detector 2
@@ -127,17 +127,17 @@ def _construct_intra_detector_coupling(self):
 
             # coupling in detector2
             if (ss == 0 and di1 == dj1 and di2 != dj2):
-                construct_intra_d_coupling_submodule(i, j, di2, dj2, self.detector2.state_num, self.detector2.dmatnum,
-                                           self.detector2.d_H.irow, self.detector2.d_H.icol, self.d2_coupling_H,
-                                           self.d2_coupling_dmat_index,
-                                           self.d2_H)
+                construct_intra_d_coupling_submodule(i, j, di2, dj2, self.detector2._basis_set_state_num, self.detector2._mat_num,
+                                                     self.detector2._d_Hamiltonian._irow, self.detector2._d_Hamiltonian._icol, self.d2_coupling_H,
+                                                     self.d2_coupling_dmat_index,
+                                                     self.d2_H)
 
             # coupling in detector 1
             elif (ss == 0 and di1 != dj1 and di2 == dj2):
-                construct_intra_d_coupling_submodule(i, j, di1, dj1, self.detector1.state_num, self.detector1.dmatnum,
-                                           self.detector1.d_H.irow, self.detector1.d_H.icol, self.d1_coupling_H,
-                                           self.d1_coupling_dmat_index,
-                                           self.d1_H)
+                construct_intra_d_coupling_submodule(i, j, di1, dj1, self.detector1._basis_set_state_num, self.detector1._mat_num,
+                                                     self.detector1._d_Hamiltonian._irow, self.detector1._d_Hamiltonian._icol, self.d1_coupling_H,
+                                                     self.d1_coupling_dmat_index,
+                                                     self.d1_H)
 
     #  construct irow and icol. (Note for irow,icol. We add off diagonal part between detector in compute_full_system_offdiagonal_paramter_number())
     #  Then we add offdiagonal index within same detector below. Same order apply to part that reconstruct offdiagonal part of mat.
@@ -172,11 +172,11 @@ def _construct_offdiag_dd_pd_coup(self):
                     # include this coupling in matrix and irow, icol.
                     self.offdiag_param_num = self.offdiag_param_num + 1
                     # As irow, icol for Hamiltonian will not change during Genetic algorithm (only value of coupling will change, we construct irow , icol here)
-                    self.full_H.irow.append(i)
-                    self.full_H.icol.append(j)
+                    self.full_H._irow.append(i)
+                    self.full_H._icol.append(j)
                     # lower triangular part.
-                    self.full_H.irow.append(j)
-                    self.full_H.icol.append(i)
+                    self.full_H._irow.append(j)
+                    self.full_H._icol.append(i)
 
                     self.pd_dd_coupling_irow.append(i)
                     self.pd_dd_coupling_icol.append(j)
@@ -208,19 +208,19 @@ def _construct_offdiag_dd_pd_coup(self):
         include coupling between detectors
         :return:
         '''
-        d1_succeed = examine_dd_coupling(self.detector1.dof, self.detector1.state_mode_list, di1, dj1)
-        d2_succeed = examine_dd_coupling(self.detector2.dof, self.detector2.state_mode_list, di2, dj2)
+        d1_succeed = examine_dd_coupling(self.detector1._dof, self.detector1._basis_set_state_qn_list, di1, dj1)
+        d2_succeed = examine_dd_coupling(self.detector2._dof, self.detector2._basis_set_state_qn_list, di2, dj2)
 
         if d1_succeed and d2_succeed:
             self.offdiag_param_num = self.offdiag_param_num + 1
             self.pd_dd_coupling_irow.append(i)
             self.pd_dd_coupling_icol.append(j)
 
-            self.full_H.irow.append(i)
-            self.full_H.icol.append(j)
+            self.full_H._irow.append(i)
+            self.full_H._icol.append(j)
             # lower triangular part.
-            self.full_H.irow.append(j)
-            self.full_H.icol.append(i)
+            self.full_H._irow.append(j)
+            self.full_H._icol.append(i)
 
             dd_coupling_num = dd_coupling_num + 1
 
@@ -228,15 +228,15 @@ def _construct_offdiag_dd_pd_coup(self):
 
     # --------- inline function --------------
 
-    self.offdiag_param_num = self.offdiag_param_num + self.detector1.offdiag_coupling_num
-    self.offdiag_param_num = self.offdiag_param_num + self.detector2.offdiag_coupling_num
+    self.offdiag_param_num = self.offdiag_param_num + self.detector1._offdiagonal_coupling_num
+    self.offdiag_param_num = self.offdiag_param_num + self.detector2._offdiagonal_coupling_num
 
     pd_coupling_num = 0
     dd_coupling_num = 0
 
     # count coupling between system and detector
-    for i in range(self.state_num):
-        for j in range(i + 1, self.state_num):
+    for i in range(self._basis_set_state_num):
+        for j in range(i + 1, self._basis_set_state_num):
             ss = self.sstate[i] - self.sstate[j]
 
             di1 = self.dstate1[i]
@@ -252,12 +252,12 @@ def _construct_offdiag_dd_pd_coup(self):
             # coupling for photon with detector1
             # photon state: [0,0] and [1,0]
             if (ss == -1 and di1 != dj1 and di2 == dj2):
-                pd_coupling_num = include_pd_coupling(self.detector1.dof, self.detector1.state_mode_list, di1, dj1,
+                pd_coupling_num = include_pd_coupling(self.detector1._dof, self.detector1._basis_set_state_qn_list, di1, dj1,
                                                       pd_coupling_num)
 
             # coupling for photon with detector2
             if (ss == -2 and di1 == dj1 and di2 != dj2):
-                pd_coupling_num = include_pd_coupling(self.detector2.dof, self.detector2.state_mode_list, di2, dj2,
+                pd_coupling_num = include_pd_coupling(self.detector2._dof, self.detector2._basis_set_state_qn_list, di2, dj2,
                                                       pd_coupling_num)
 
             # coupling between detector1 and detector2
@@ -274,11 +274,11 @@ def _insert_upper_lower_triangular_index(recv_H, input_H):
     :param input_H: Hamiltnian for input.
     :return:
     '''
-    num = len(input_H.irow)
+    num = len(input_H._irow)
     for i in range(num):
         # upper diagonal part
-        recv_H.irow.append(input_H.irow[i])
-        recv_H.icol.append(input_H.icol[i])
+        recv_H._irow.append(input_H._irow[i])
+        recv_H._icol.append(input_H._icol[i])
         # lower diagonal part
-        recv_H.irow.append(input_H.icol[i])
-        recv_H.icol.append(input_H.irow[i])
+        recv_H._irow.append(input_H._icol[i])
+        recv_H._icol.append(input_H._irow[i])

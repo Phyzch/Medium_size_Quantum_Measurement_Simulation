@@ -12,11 +12,11 @@ def read_offdiag_coupling_element(self, offdiagonal_coupling_list):
     self.offdiag_param_list = offdiagonal_coupling_list.copy()
 
     begin_index = 0
-    end_index = self.detector1.offdiag_coupling_num
+    end_index = self.detector1._offdiagonal_coupling_num
     d1_offdiag_param = offdiagonal_coupling_list [ begin_index: end_index].copy()
 
     begin_index = end_index
-    end_index = end_index + self.detector2.offdiag_coupling_num
+    end_index = end_index + self.detector2._offdiagonal_coupling_num
     d2_offdiag_param = offdiagonal_coupling_list [ begin_index : end_index ].copy()
 
     begin_index = end_index
@@ -27,7 +27,7 @@ def read_offdiag_coupling_element(self, offdiagonal_coupling_list):
 
 def output_state_mode(self):
     # output quantum num for state
-    print(self.state_mode_list)
+    print(self._basis_set_state_qn_list)
 
 # ------ output offdiagonal parameter number --------
 def output_offdiagonal_parameter_number(self):
@@ -36,15 +36,15 @@ def output_offdiagonal_parameter_number(self):
 
 def output_off_diagonal_coupling_mode_info(self):
     Coupling_mode_list = []
-    self.state_num = self.full_H.statenum()
-    self.matnum = self.full_H.matnum()
-    for i in range(self.state_num, self.matnum , 2):
-        irow_index = self.full_H.irow[i]
-        icol_index = self.full_H.icol[i]
+    self._basis_set_state_num = self.full_H._basis_set_state_num()
+    self.mat_num = self.full_H.mat_num()
+    for i in range(self._basis_set_state_num, self.mat_num , 2):
+        irow_index = self.full_H._irow[i]
+        icol_index = self.full_H._icol[i]
 
         coupling_mode = []
-        coupling_mode.append(self.state_mode_list[irow_index])
-        coupling_mode.append(self.state_mode_list[icol_index])
+        coupling_mode.append(self._basis_set_state_qn_list[irow_index])
+        coupling_mode.append(self._basis_set_state_qn_list[icol_index])
 
         Coupling_mode_list.append(coupling_mode)
 

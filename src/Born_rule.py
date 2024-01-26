@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from Fitness_function import simulate_full_system_energy_flow, Analyze_peak_and_peak_duration
 
-from include.full_system_class.Full_system_class import full_system
+from include.full_system_class.__init__ import full_system
 from Feed_full_system_to_Genetic_algorithm import output_full_system_state_and_coupling_info
 from include.util import Broadcast_data
 

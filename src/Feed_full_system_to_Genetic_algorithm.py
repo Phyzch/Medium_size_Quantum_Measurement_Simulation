@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from include.full_system_class.Full_system_class import full_system
+from include.full_system_class.__init__ import full_system
 
-from include.genetic_algorithm_class.Genetic_algorithm_class import Extend_Genetic_algorithm
+from include.genetic_algorithm_class.__init__ import Extend_Genetic_algorithm
 from Fitness_function import fitness_function , simulate_full_system_energy_flow, Analyze_peak_and_peak_duration , fit_func1 , compute_coupling_geometric_mean
 import matplotlib.gridspec as gridspec
 from include.util import Broadcast_data
@@ -32,13 +32,13 @@ def Implement_genetic_algorithm(file_path):
     # ------------------------------------- End specify parameter for full system and photon & detector----------
 
     # ------- declare variable for Genetic algorithm simulation ---------------------
-    population_size_over_all_process = 400
+    population_size_over_all_process = 1000
 
     # divide population among different processes and use parallel computing to speed up computation
     population_size = int(population_size_over_all_process / num_proc)
 
     # parameter for genetic algorithm. See  https://www.wikiwand.com/en/Genetic_algorithm
-    generations = 40
+    generations = 20
     crossover_prob = 0.7
     mutation_prob = 0.01
     # ratio of population to be immigrated between population in different process
@@ -115,13 +115,13 @@ def output_full_system_state_and_coupling_info(full_system_instance):
     if(rank == 0):
         # print information about structure of system
         full_system_instance.output_state_mode()
-        full_system_instance.detector1.output_detector_state_coupling()
+        full_system_instance.detector1.output_detector_anharmonic_coupling_state_pairs()
         full_system_instance.output_off_diagonal_coupling_mode_info()
-        print("parameter number for detector1: " + str(full_system_instance.detector1.offdiag_coupling_num))
-        print("parameter number for detector2: " + str(full_system_instance.detector2.offdiag_coupling_num))
+        print("parameter number for detector1: " + str(full_system_instance.detector1._offdiagonal_coupling_num))
+        print("parameter number for detector2: " + str(full_system_instance.detector2._offdiagonal_coupling_num))
         print("paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiag_param_num -
-                                                                                   full_system_instance.detector1.offdiag_coupling_num -
-                                                                                   full_system_instance.detector2.offdiag_coupling_num))
+                                                                                   full_system_instance.detector1._offdiagonal_coupling_num -
+                                                                                   full_system_instance.detector2._offdiagonal_coupling_num))
 
 def genetic_algorithm_info(file_path, population_size, population_size_over_all_process):
     # info file for Genetic algorithm.
