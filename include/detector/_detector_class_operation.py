@@ -19,14 +19,3 @@ def detector_add_basis_set_state(self, state_quantum_number, state_energy, posit
     self._basis_set_state_energy_list.insert(position, state_energy)
 
 
-def _detector_add_hamiltonian_diagonal_part(self):
-    '''
-    construct diagonal part of the hamiltonian.
-    :return:
-    '''
-    # construct detector Hamiltonian diagonal part.
-    for i in range(self._basis_set_state_num):
-        self.append_matrix_element(self._basis_set_state_energy_list[i], i, i)
-
-    # record diagonal part of Hamiltonian
-    self._diagonal_mat = self._mat.copy()

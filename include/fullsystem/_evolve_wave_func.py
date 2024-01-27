@@ -1,6 +1,6 @@
 import numpy as np
-from include.detector_class.__init__ import Detector
-from include.Constructing_state_module import binary_search_qn_list
+from include.detector.__init__ import Detector
+from include.constructing_state_module import binary_search_qn_list
 
 import numba
 from numba import jit
@@ -37,9 +37,9 @@ def initialize_wave_function(self):
 
     for i in range(self._basis_set_state_num):
         if self.dstate1[i] == position1 and self.dstate2[i] == position2:
-            if self.sstate[i] == 1:
+            if self.pstate[i] == 1:
                 self._wave_function[i] = self.initial_photon_wave_function[0]
-            if self.sstate[i] == 2:
+            if self.pstate[i] == 2:
                 self._wave_function[i] = self.initial_photon_wave_function[1]
 
 # ----------- Evolve Schrodinger equation on basis set. -------------------------
@@ -54,7 +54,7 @@ def check_energy_conservation(time_step, Time_list, d1_energy_list, d2_energy_li
             raise NameError("SUR algorithm do not converge energy. Check code for error")
 
 def Evolve_dynamics(self):
-    final_time = self.Time_duration
+    final_time = self.time_duration
     output_time_step = self.output_time_step
 
     # define time step to do simulation

@@ -4,14 +4,14 @@ import os
 home_directory = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/"
 # add search directory path to sys.path.
 add_sys_path_list = [home_directory , os.path.join(home_directory , "src" )  ,
-                     os.path.join(home_directory , "include/detector_class/"),
-                     os.path.join(home_directory , "include/full_system_class/") ,
+                     os.path.join(home_directory , "include/detector/"),
+                     os.path.join(home_directory , "include/fullsystem/") ,
                      os.path.join(home_directory , "include/genetic_algorithm_class/")]
 
 sys.path = sys.path + add_sys_path_list
 
-from Feed_full_system_to_Genetic_algorithm import Implement_genetic_algorithm
-from Born_rule import Analyze_Born_rule
+from feed_full_system_to_Genetic_algorithm import Implement_genetic_algorithm
+from born_rule import Analyze_Born_rule
 import matplotlib
 
 from mpi4py import MPI

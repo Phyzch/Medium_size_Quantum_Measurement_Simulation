@@ -1,5 +1,5 @@
 from include.util import *
-from include.Constructing_state_module import binary_search_qn_list
+from include.constructing_state_module import binary_search_qn_list
 
 
 '''
@@ -52,7 +52,7 @@ def _construct_detector_Hamiltonian_diagonal_part(self):
 
         # --------- Check if this state is outside energy window, if so , jump to valid state -------------
         energy = np.sum(quantum_number * self._frequency)
-        if  energy > self._energy_window + initial_state_energy:
+        if  energy > self._energy_window_for_basis_set_state + initial_state_energy:
             k = 0
             # jump to next state whose energy is smaller than initial_state_energy + energy_window
             while quantum_number[k] == 0:
@@ -75,7 +75,7 @@ def _construct_detector_Hamiltonian_diagonal_part(self):
     self._basis_set_state_num = len(self._basis_set_state_energy_list)
 
     # construct diagonal part of the hamiltonian.
-    self._detector_add_hamiltonian_diagonal_part()
+    self._add_hamiltonian_diagonal_part()
 
 def _construct_offdiag_detector_state_coupling(self):
     '''

@@ -4,7 +4,7 @@ from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 num_proc = comm.Get_size()
-from include.full_system_class.__init__ import full_system
+from include.fullsystem.__init__ import FullSystem
 
 def extract_first_peak(list):
     # extract list of consecutive number from list as set this as first peak.

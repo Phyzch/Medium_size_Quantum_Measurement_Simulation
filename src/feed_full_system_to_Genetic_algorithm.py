@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from include.full_system_class.__init__ import full_system
+from include.fullsystem.__init__ import FullSystem
 
 from include.genetic_algorithm_class.__init__ import Extend_Genetic_algorithm
-from Fitness_function import fitness_function , simulate_full_system_energy_flow, Analyze_peak_and_peak_duration , fit_func1 , compute_coupling_geometric_mean
+from fitness_function import fitness_function , simulate_full_system_energy_flow, Analyze_peak_and_peak_duration , fit_func1 , compute_coupling_geometric_mean
 import matplotlib.gridspec as gridspec
 from include.util import Broadcast_data
 from mpi4py import MPI
@@ -51,15 +51,15 @@ def Implement_genetic_algorithm(file_path):
     output_time_step = 10
 
     #  Initialize full system and construct first part of Hamiltonian.
-    full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window, photon_energy, initial_photon_wavefunction , Time_duration = Time_duration, output_time_step = output_time_step)
-    full_system_instance.construct_full_system_Hamiltonian_part1()
+    full_system_instance = FullSystem(Detector_1_parameter, Detector_2_parameter, full_system_energy_window, photon_energy, initial_photon_wavefunction, Time_duration = Time_duration, output_time_step = output_time_step)
+    full_system_instance.construct_full_system_hamiltonian_part1()
 
     # print information about structure of system
     if(rank == 0):
         output_full_system_state_and_coupling_info(full_system_instance)
 
     # parameter_number is number of parameter to be optimized in Genetic algorithm.
-    parameter_number = full_system_instance.output_offdiagonal_parameter_number()
+    parameter_number = full_system_instance.show_offdiag_matrix_num()
 
     # Prepare parameter for genetic algorithm
     param = [coupling_parameter_range , full_system_instance, parameter_number , highest_peak_bool]
@@ -114,9 +114,9 @@ def set_detector_param():
 def output_full_system_state_and_coupling_info(full_system_instance):
     if(rank == 0):
         # print information about structure of system
-        full_system_instance.output_state_mode()
+        full_system_instance.output_state_qn_number_list()
         full_system_instance.detector1.output_detector_anharmonic_coupling_state_pairs()
-        full_system_instance.output_off_diagonal_coupling_mode_info()
+        full_system_instance.output_off_diagonal_coupling_state_pairs_info()
         print("parameter number for detector1: " + str(full_system_instance.detector1._offdiagonal_coupling_num))
         print("parameter number for detector2: " + str(full_system_instance.detector2._offdiagonal_coupling_num))
         print("paramter number for coupling betweeen detector and system:  " + str(full_system_instance.offdiag_param_num -

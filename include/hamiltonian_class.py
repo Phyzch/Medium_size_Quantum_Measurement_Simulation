@@ -26,7 +26,7 @@ class Hamiltonian():
 
         self._mat_num = 0
 
-        # anharmonic couplings between basis set states.
+        # off-diagonal couplings between basis set states.
         self._offdiagonal_coupling_num = 0
 
         # anharmonic coupling elements between states in molecules.
@@ -45,14 +45,48 @@ class Hamiltonian():
         self._irow.append(irow_index)
         self._icol.append(icol_index)
 
+    def _add_hamiltonian_diagonal_part(self):
+        '''
+        construct diagonal part of the hamiltonian.
+        :return:
+        '''
+        # construct detector Hamiltonian diagonal part.
+        for i in range(self._basis_set_state_num):
+            self.append_matrix_element(self._basis_set_state_energy_list[i], i, i)
+
+        # record diagonal part of Hamiltonian
+        self._diagonal_mat = self._mat.copy()
+
+
     def show_mat_num(self):
+        '''
+        return total number of hamiltonian matrix.
+        :return:
+        '''
         return self._mat_num
 
     def show_state_num(self):
+        '''
+        return number of basis set states.
+        :return:
+        '''
         return self._basis_set_state_num
 
     def show_offdiag_matrix_num(self):
+        '''
+        return number of off-diagonal matrix elements.
+        :return:
+        '''
         return self._offdiagonal_coupling_num
+
+    def get_basis_set_state_energy(self, i):
+        '''
+        return energy of the basis set state.
+        :param i: index for the element.
+        :return:
+        '''
+        return self._basis_set_state_energy_list[i]
+
 
     def get_irow(self, i):
         '''
@@ -77,6 +111,15 @@ class Hamiltonian():
         :return:
         '''
         return self._mat[i]
+
+    def replace_mat_value(self, i, value):
+        '''
+        replace matrix value of sparse Hamiltonian matrix with element index i.
+        :param i: index to replace
+        :param value: new value of matrix element.
+        :return:
+        '''
+        self._mat[i] = value
 
     def numpy_array_for_data(self):
         '''

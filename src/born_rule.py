@@ -3,10 +3,10 @@ import os
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from Fitness_function import simulate_full_system_energy_flow, Analyze_peak_and_peak_duration
+from fitness_function import simulate_full_system_energy_flow, Analyze_peak_and_peak_duration
 
-from include.full_system_class.__init__ import full_system
-from Feed_full_system_to_Genetic_algorithm import output_full_system_state_and_coupling_info
+from include.fullsystem.__init__ import FullSystem
+from feed_full_system_to_Genetic_algorithm import output_full_system_state_and_coupling_info
 from include.util import Broadcast_data
 
 from mpi4py import MPI
@@ -59,15 +59,15 @@ def Analyze_Born_rule(file_path):
     full_system_energy_window = 0
 
     # full system 's construct_full_system_Hamiltonian_part2() is called within fitness function in each cycle of genetic algorithm.
-    full_system_instance = full_system(Detector_1_parameter, Detector_2_parameter, full_system_energy_window,
-                                       photon_energy, initial_photon_wavefunction)
+    full_system_instance = FullSystem(Detector_1_parameter, Detector_2_parameter, full_system_energy_window,
+                                      photon_energy, initial_photon_wavefunction)
 
-    full_system_instance.construct_full_system_Hamiltonian_part1()
+    full_system_instance.construct_full_system_hamiltonian_part1()
 
     # print information about structure of system
     output_full_system_state_and_coupling_info(full_system_instance)
 
-    parameter_number = full_system_instance.output_offdiagonal_parameter_number()
+    parameter_number = full_system_instance.show_offdiag_matrix_num()
 
     left_localization_num = 0
     right_localization_num = 0
