@@ -112,6 +112,27 @@ class Hamiltonian():
         '''
         return self._mat[i]
 
+    def get_mat_array(self):
+        '''
+        show numpy array of hamiltonian matrix
+        :return:
+        '''
+        return np.copy(self._mat_array)
+
+    def get_irow_array(self):
+        '''
+        show numpy array of the row index
+        :return:
+        '''
+        return np.copy(self._irow_array)
+
+    def get_icol_array(self):
+        '''
+        show numpy array of the column index
+        :return:
+        '''
+        return np.copy(self._icol_array)
+
     def replace_mat_value(self, i, value):
         '''
         replace matrix value of sparse Hamiltonian matrix with element index i.

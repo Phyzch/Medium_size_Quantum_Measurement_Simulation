@@ -30,10 +30,10 @@ class FullSystem(Hamiltonian):
     from ._read_output_func import read_offdiag_coupling_element, \
         output_state_qn_number_list, output_off_diagonal_coupling_state_pairs_info
 
-    from ._construct_full_sys_hamiltonian_part2 import construct_full_system_Hamiltonian_part2, _reverse_mat_diag_form, \
+    from ._construct_full_sys_hamiltonian_part2 import construct_full_system_Hamiltonian_part2,  \
         _construct_full_system_offdiag_coupling
 
-    from ._evolve_wave_func import initialize_wave_function, Evolve_dynamics, _evaluate_d_energy, \
+    from ._evolve_wave_func import initialize_wave_function, evolve_wave_function, _evaluate_detector_energy, \
         _evaluate_photon_energy
     # ----------------------------------------------------
 

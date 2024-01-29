@@ -124,7 +124,7 @@ def simulate_full_system_energy_flow(full_system_instance, off_diagonal_coupling
     full_system_instance.initialize_wave_function()
 
     # Evolve dynamics of full system
-    photon_energy_list, d1_energy_list, d2_energy_list, time_list = full_system_instance.Evolve_dynamics()
+    photon_energy_list, d1_energy_list, d2_energy_list, time_list = full_system_instance.evolve_wave_function()
 
     # Analyze_simulation result of full_system. (wave function)
     init_photon_energy = full_system_instance.init_photon_energy
