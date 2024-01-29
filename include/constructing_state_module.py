@@ -1,17 +1,17 @@
 import numpy as np
 
 
-def compare_mode_quantum_number(mode1, mode2):
-    dof = len(mode1)
-    if dof != len(mode2):
+def compare_mode_quantum_number(quantum_number_1, quantum_number_2):
+    dof = len(quantum_number_1)
+    if dof != len(quantum_number_2):
         print("Wrong. Mode with different length can't be compared")
 
     for i in range(dof):
-        if mode1[i] == mode2[i]:
+        if quantum_number_1[i] == quantum_number_2[i]:
             continue
-        elif mode1[i] > mode2[i]:
+        elif quantum_number_1[i] > quantum_number_2[i]:
             return 1
-        elif mode1[i] < mode2[i]:
+        elif quantum_number_1[i] < quantum_number_2[i]:
             return -1
 
     return 0

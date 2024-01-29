@@ -7,7 +7,7 @@ from fitness_function import simulate_full_system_energy_flow, Analyze_peak_and_
 
 from include.fullsystem.__init__ import FullSystem
 from feed_full_system_to_Genetic_algorithm import output_full_system_state_and_coupling_info
-from include.util import Broadcast_data
+from include.util import broadcast_data
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
@@ -103,9 +103,9 @@ def Analyze_Born_rule(file_path):
             localization_side_list.append(localization_bool)
 
         # Broadcast data to all process.
-        parameter_list = Broadcast_data(parameter_list , num_proc )
-        max_energy_change_list = Broadcast_data(max_energy_change_list , num_proc)
-        localization_side_list = Broadcast_data(localization_side_list , num_proc )
+        parameter_list = broadcast_data(parameter_list, num_proc)
+        max_energy_change_list = broadcast_data(max_energy_change_list, num_proc)
+        localization_side_list = broadcast_data(localization_side_list, num_proc)
 
         Analyze_Localization_prob( max_energy_change_list, localization_side_list, parameter_list, initial_photon_wavefunction, iteration_number_per_core, iteration_number, file_path)
 

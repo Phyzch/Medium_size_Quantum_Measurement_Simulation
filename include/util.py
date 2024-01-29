@@ -9,11 +9,11 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 num_proc= comm.Get_size()
 
-def Broadcast_data(data, num_proc):
+def broadcast_data(data, num_proc):
     '''
      broadcast data to all process.
     :param data:  should have shape [iter_num_per_process, : ]
-    :param num_proc:
+    :param num_proc: number of process for MPI calculation.
     :return:
     '''
     data = np.array(data)
@@ -31,18 +31,16 @@ def Broadcast_data(data, num_proc):
 
     return data
 
-def shuffle_data(data, num_proc , arr_random):
+def shuffle_data(data, num_proc, random_arr):
     '''
-
-    :param data:
-    :param num_proc:
-    :param arr_random:  random number used to shuffle data. should be array with size [num_proc]
-    arr_random = np.arange(num_proc)
-    np.random.shuffle(arr_random)
-
+    shuffle the data in each processes to other processes according to order (random_arr)
+    :param data: data to shuffle
+    :param num_proc: number of process in parallel computing
+    :param random_arr:  random number used to shuffle data. should be array with size [num_proc]
+    random_arr = np.arange(num_proc)
+    np.random.shuffle(random_arr)
     :return:
     '''
-
     data = np.array(data)
     shape = data.shape
     recv_shape = np.concatenate([[num_proc], shape])
@@ -52,8 +50,8 @@ def shuffle_data(data, num_proc , arr_random):
     comm.Gather(data, recv_data, 0 )
 
     recv_data_shuffle = []
-    if(rank == 0):
-        recv_data_shuffle = np.array( [ recv_data[i] for i in arr_random ] )
+    if rank == 0:
+        recv_data_shuffle = np.array([recv_data[i] for i in random_arr])
 
     comm.Scatter(recv_data_shuffle , data, 0 )
 

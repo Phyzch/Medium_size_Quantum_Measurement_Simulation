@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 
 from include.fullsystem.__init__ import FullSystem
 
-from include.genetic_algorithm_class.__init__ import Extend_Genetic_algorithm
+from include.genetic_algorithm_class.__init__ import ExtendGeneticAlgorithm
 from fitness_function import fitness_function , simulate_full_system_energy_flow, Analyze_peak_and_peak_duration , fit_func1 , compute_coupling_geometric_mean
 import matplotlib.gridspec as gridspec
-from include.util import Broadcast_data
+from include.util import broadcast_data
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -70,8 +70,8 @@ def Implement_genetic_algorithm(file_path):
     f2 = genetic_algorithm_info(file_path, population_size, population_size_over_all_process)
 
     # ---------------------- initialize Genetic algorithm and do Genetic algorithm ---------------------------------------
-    ga  = Extend_Genetic_algorithm(param, population_size = population_size, generations = generations, crossover_probability = crossover_prob, mutation_probability = mutation_prob,
-                                    elitism = True, maximise_fitness = True, immigration_ratio= immigrate_population_ratio , immigrantion_rate= immigration_rate , info_file = f2)
+    ga  = ExtendGeneticAlgorithm(param, population_size = population_size, generations = generations, crossover_probability = crossover_prob, mutation_probability = mutation_prob,
+                                 elitism = True, maximise_fitness = True, immigration_population_ratio= immigrate_population_ratio, immigrantion_rate= immigration_rate, info_file = f2)
 
     # customized fitness function for genetic algorithm.
     ga.fitness_function = fitness_function
@@ -149,8 +149,8 @@ def Evaluate_simulation_result( *args ):
     last_generation_param = [member.genes for member in last_generation]
 
     # Broadcast fitness function and paramter to all process
-    parameter_for_all = Broadcast_data(last_generation_param , num_proc )
-    fitness_for_all = Broadcast_data( np.real(last_generation_fitness_func) , num_proc )
+    parameter_for_all = broadcast_data(last_generation_param, num_proc)
+    fitness_for_all = broadcast_data(np.real(last_generation_fitness_func), num_proc)
 
 
     if rank == 0:
