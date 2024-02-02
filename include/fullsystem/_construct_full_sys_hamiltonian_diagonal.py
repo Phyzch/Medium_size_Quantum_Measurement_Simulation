@@ -1,7 +1,3 @@
-import numpy as np
-from include.detector.__init__ import Detector
-from include.constructing_state_module import binary_search_qn_list
-
 '''
 first part of constructing Hamiltonian. This only have to be called once.
 We do following : 1. compute energy of full_system  : self.__compute_initial_energy()
@@ -10,11 +6,15 @@ We do following : 1. compute energy of full_system  : self.__compute_initial_ene
                   4. construct irow, icol for off-diagonal coupling between state : self.__construct_offdiag_dd_pd_coup() , self.__construct_intra_detector_coupling()
 '''
 
-def construct_full_system_hamiltonian_part1(self):
+import numpy as np
+
+
+
+def construct_full_system_hamiltonian_diagonal_part(self):
     self._compute_initial_energy()
 
-    self.detector1.construct_detector_Hamiltonian_part1()
-    self.detector2.construct_detector_Hamiltonian_part1()
+    self.detector1.construct_detector_Hamiltonian_diagonal_part()
+    self.detector2.construct_detector_Hamiltonian_diagonal_part()
 
     # construct basis set for full system.
     # also construct diagonal part of Hamiltonian

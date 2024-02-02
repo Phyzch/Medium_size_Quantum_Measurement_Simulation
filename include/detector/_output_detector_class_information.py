@@ -1,4 +1,3 @@
-import numpy as np
 '''
 output information about detector Hamiltonian. 
 This only includes information specific to the detector Hamiltonian class.

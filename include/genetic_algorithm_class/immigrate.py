@@ -1,4 +1,9 @@
-from include.util import *
+'''
+Code to immigrate the individual between different processes when we do multi-processing Genetic algorithm.
+'''
+import numpy as np
+from include.util import rank, num_proc, shuffle_data
+import copy
 from pyeasyga import pyeasyga
 
 

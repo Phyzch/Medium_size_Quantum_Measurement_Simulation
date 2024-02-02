@@ -3,12 +3,10 @@ define
 '''
 
 import numpy as np
-from include.constructing_state_module import binary_search_qn_list
-from include.hamiltonian_class import  Hamiltonian
+import include.search_quantum_number_module
+import include.hamiltonian_class
 
-class Detector(Hamiltonian):
-
-    # fixme: what is the relation between hamiltonian class and detector class? It should be inheritence.
+class Detector(include.hamiltonian_class.Hamiltonian):
 
     from _detector_class_operation import detector_add_basis_set_state
 
@@ -17,15 +15,15 @@ class Detector(Hamiltonian):
                                                     get_basis_set_state_quantum_number,
                                                     output_detector_anharmonic_coupling_state_pairs)
 
-    from _construct_detector_Hamiltonian_part1 import (construct_detector_Hamiltonian_part1 ,
-                                                       _construct_detector_Hamiltonian_diagonal_part ,
-                                                       _construct_offdiag_detector_state_coupling)
+    from _construct_detector_Hamiltonian_diagonal import (construct_detector_Hamiltonian_diagonal_part ,
+                                                          _construct_detector_Hamiltonian_diagonal_part ,
+                                                          _construct_offdiag_detector_state_coupling)
 
-    from _construct_detector_Hamiltonian_part2 import construct_offdiag_coupling_value
+    from _construct_detector_Hamiltonian_offdiagonal import construct_offdiag_coupling_value
 
 
     def __init__(self , *args):
-        Hamiltonian.__init__(self)
+        include.hamiltonian_class.Hamiltonian.__init__(self)
 
         dof, frequency, nmax, initial_state_qn, energy_window_for_basis_set, energy_window_for_coupling = args
 
@@ -66,7 +64,7 @@ class Detector(Hamiltonian):
         The quantum number (q.n.) of the initial state is defined by self.initial_state
         :return:
         '''
-        init_state_pos, exist = binary_search_qn_list(self._basis_set_state_qn_list, self._initial_state_qn)
+        init_state_pos, exist = include.search_quantum_number_module.binary_search_qn_list(self._basis_set_state_qn_list, self._initial_state_qn)
         if not exist:
             raise NameError("Wrong . Initial state not in state space")
 

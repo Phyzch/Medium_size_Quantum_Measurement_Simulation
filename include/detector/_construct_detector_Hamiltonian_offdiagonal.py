@@ -1,13 +1,14 @@
-from include.util import *
+'''
+  adding coupling matrix element and reverse to diagonal form
+'''
+import numpy as np
 
-'''
-  adding coupling matrix element and reverse to diagonal form 
-'''
+
 
 def construct_offdiag_coupling_value(self, offdiag_coupling_element_list):
     '''
     Now we get value of off-diagonal matrix element.
-    The row and column index of coupling matrix element is defined in _construct_detector_Hamiltonian_part1.py
+    The row and column index of coupling matrix element is defined in _construct_detector_Hamiltonian_diagonal.py
     :return:
     '''
 

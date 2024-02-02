@@ -1,7 +1,5 @@
 import os
 import numpy as np
-import copy
-import random
 from timeit import default_timer as timer
 
 from mpi4py import MPI

@@ -1,5 +1,6 @@
 from pyeasyga import pyeasyga
-from include.util import *
+from timeit import default_timer as timer
+from include.util import rank
 
 '''
 Need to specify fitness function for Genetic algorithm module
@@ -35,8 +36,10 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
                  maximise_fitness=True,
                  info_file = None):
         '''
+        For fitness function:  fitness_function (gene, seed_data)
 
         :param seed_data: input data to the Genetic Algorithm
+        seed_data = [coupling_parameter_range, full_system_instance, parameter_number, highest_peak_bool]
         :type seed_data: list of objects
         :param population_size: size of population
         :param generations: number of generations to evolve
@@ -47,6 +50,7 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
         :param elitism: bool. if true, the best individual is not disgarded.
         :param maximise_fitness: bool. If true, rank the individual by descending order according to fitness value.
         :param info_file:
+
         '''
         # inherit from parent and define your own variable here in initialization function
         super().__init__(seed_data=seed_data,population_size=population_size,
@@ -72,10 +76,11 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
 
         self.info_file = info_file
 
+
         # number and range of parameter to optimize.
-        param_range , _ ,  param_number , _ = self.seed_data
-        self.param_range = param_range
-        self.param_number = param_number
+        parameter_range , _ ,  parameter_number , _ = self.seed_data
+        self.parameter_range = parameter_range
+        self.parameter_number = parameter_number
 
 
 
@@ -106,6 +111,8 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
                 self.info_file.write('time for  generation  ' + str(generation_number) + "  : " + str(end_time - start_time) + 's \n')
 
 
+    def show_current_generation(self):
+        return self.current_generation.copy()
 
 
 

@@ -1,6 +1,11 @@
-from include.util import *
+'''
+customized  mutation_function and crossover_function.
+Used to generate the child generation.
+'''
+import random
+import numpy as np
 
-# -------------- customized create_individual function , mutation_function and crossover_function.  -----------------
+
 def crossover_function(parent_1, parent_2, parameter_number):
     '''
     cross over function for continuous variable.

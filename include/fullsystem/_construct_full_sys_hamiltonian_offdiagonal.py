@@ -1,11 +1,10 @@
-import numpy as np
 '''
 part II of constructing Hamiltonian
 We do the following : 1. revert Hamiltonian to diagonal form
                       2. read off-diagonal coupling strength from Genetic algorithm and add in Hamiltonian
 '''
 
-def construct_full_system_Hamiltonian_part2(self, offdiagonal_coupling_list):
+def construct_full_system_Hamiltonian_offdiagonal_part(self, offdiagonal_coupling_list):
     '''
     After we read offdiagonal parameter from Genetic algorithm, we do this part.
     offdiagonal_coupling_list : size [self.offdiagonal coupling num]

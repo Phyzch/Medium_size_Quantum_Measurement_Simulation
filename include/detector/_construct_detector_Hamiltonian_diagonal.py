@@ -1,5 +1,5 @@
-from include.util import *
-from include.constructing_state_module import binary_search_qn_list
+import numpy as np
+import include.search_quantum_number_module
 
 
 '''
@@ -7,7 +7,7 @@ part I of constructing detector Hamiltonian.
 We construct : 1. state 2. Hamiltonian diagonal part  3. irow, icol for coupling between states in Hamiltonian. 
 in part II, we will add strength of coupling between states (get from Genetic algorithm)
 '''
-def construct_detector_Hamiltonian_part1(self):
+def construct_detector_Hamiltonian_diagonal_part(self):
     '''
     off-diagonal coupling should read from Genetic algorithm part
     Here we only proceed to knowing off-digonal element number.
@@ -68,7 +68,7 @@ def _construct_detector_Hamiltonian_diagonal_part(self):
         # -----------------------------------
 
         # now put this state into state_mode_list which is ordered.
-        position, exist = binary_search_qn_list(self._basis_set_state_qn_list, quantum_number)
+        position, exist = include.search_quantum_number_module.binary_search_qn_list(self._basis_set_state_qn_list, quantum_number)
         if not exist:
             self.detector_add_basis_set_state(quantum_number, energy, position)
 

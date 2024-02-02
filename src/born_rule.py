@@ -3,10 +3,10 @@ import os
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from fitness_function import simulate_full_system_energy_flow, Analyze_peak_and_peak_duration
+from simulate_energy_flow_between_photon_and_detector import simulate_full_system_quantum_dynamics, analyze_peak_and_peak_duration
 
 from include.fullsystem.__init__ import FullSystem
-from feed_full_system_to_Genetic_algorithm import output_full_system_state_and_coupling_info
+from output_simulation_result import output_full_system_state_and_coupling_info
 from include.util import broadcast_data
 
 from mpi4py import MPI
@@ -62,7 +62,7 @@ def Analyze_Born_rule(file_path):
     full_system_instance = FullSystem(Detector_1_parameter, Detector_2_parameter, full_system_energy_window,
                                       photon_energy, initial_photon_wavefunction)
 
-    full_system_instance.construct_full_system_hamiltonian_part1()
+    full_system_instance.construct_full_system_hamiltonian_diagonal_part()
 
     # print information about structure of system
     output_full_system_state_and_coupling_info(full_system_instance)
@@ -87,9 +87,9 @@ def Analyze_Born_rule(file_path):
             coupling_param = np.random.normal(0, coupling_parameter_range, parameter_number).tolist()
             assert(type(coupling_param) == list )
 
-            photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_energy_flow(full_system_instance, coupling_param)
+            photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_quantum_dynamics(full_system_instance, coupling_param)
 
-            _, max_energy_change, _, localization_bool = Analyze_peak_and_peak_duration(
+            _, max_energy_change, _, localization_bool = analyze_peak_and_peak_duration(
                 d1_energy_list_change, d2_energy_list_change, time_list , highest_peak_bool= highest_peak_bool)
 
             if(localization_bool == 1):
@@ -114,7 +114,7 @@ def plot_trail_simulation_result(full_system_instance, coupling_parameter_range,
     if rank == 0:
         coupling_param = np.random.normal(0, coupling_parameter_range, parameter_number).tolist()
 
-        photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_energy_flow(
+        photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list = simulate_full_system_quantum_dynamics(
             full_system_instance, coupling_param)
 
         tot_energy = photon_energy_list + d1_energy_list_change + d2_energy_list_change

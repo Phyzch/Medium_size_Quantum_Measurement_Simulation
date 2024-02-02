@@ -1,6 +1,6 @@
 import numpy as np
-from include.detector.__init__ import Detector
-from include.constructing_state_module import binary_search_qn_list
+import include.detector.__init__
+import include.search_quantum_number_module
 
 import numba
 from numba import jit

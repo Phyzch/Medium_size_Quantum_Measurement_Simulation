@@ -1,5 +1,14 @@
+# in general, we should avoid using syntax like from ***(module) import *
+# the best way to import module is actually import module, see https://python-docs.readthedocs.io/en/latest/writing/structure.html
 import sys
 import os
+import feed_full_system_to_Genetic_algorithm
+import matplotlib
+
+from mpi4py import MPI
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+num_proc = comm.Get_size()
 
 home_directory = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/"
 # add search directory path to sys.path.
@@ -10,15 +19,6 @@ add_sys_path_list = [home_directory , os.path.join(home_directory , "src" )  ,
 
 sys.path = sys.path + add_sys_path_list
 
-from feed_full_system_to_Genetic_algorithm import Implement_genetic_algorithm
-from born_rule import Analyze_Born_rule
-import matplotlib
-
-from mpi4py import MPI
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-num_proc = comm.Get_size()
-
 def main():
     '''
 
@@ -26,15 +26,8 @@ def main():
     '''
     matplotlib.rcParams.update({'font.size': 20})
 
-    # print_sys_path_info()
-
     file_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Genetic_algorithm/try/"
-    Implement_genetic_algorithm(file_path)
+    feed_full_system_to_Genetic_algorithm.implement_genetic_algorithm(file_path)
 
-    # Analyze_Born_rule_file_path = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_simulation/result/Born_rule/try/"
-    # Analyze_Born_rule(Analyze_Born_rule_file_path)
-
-def print_sys_path_info():
-    print(sys.path)
 
 main()

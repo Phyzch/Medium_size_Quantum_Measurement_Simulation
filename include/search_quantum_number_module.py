@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def compare_mode_quantum_number(quantum_number_1, quantum_number_2):
+def compare_quantum_number(quantum_number_1, quantum_number_2):
     dof = len(quantum_number_1)
     if dof != len(quantum_number_2):
         print("Wrong. Mode with different length can't be compared")
@@ -35,7 +35,7 @@ def binary_search_qn_list(arr, element):
 
 
     while right_flag > left_flag:
-        mark = compare_mode_quantum_number(element, arr[mid])
+        mark = compare_quantum_number(element, arr[mid])
         if mark == 1:
             left_flag = mid + 1
             mid = (left_flag + right_flag ) // 2
@@ -46,7 +46,7 @@ def binary_search_qn_list(arr, element):
             exist = True
             return mid , exist
 
-    mark = compare_mode_quantum_number(element, arr[mid])
+    mark = compare_quantum_number(element, arr[mid])
     if mark == 0:
         exist  = True
         return mid , exist

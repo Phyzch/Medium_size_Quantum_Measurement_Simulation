@@ -1,4 +1,10 @@
-from include.util import *
+'''
+code to create first generation and next generation for genetic algorithm.
+'''
+
+import copy
+import random
+import numpy as np
 from pyeasyga import pyeasyga
 
 
@@ -88,11 +94,11 @@ def create_new_population(self):
 
         if can_crossover:
             child_1.genes, child_2.genes = self.crossover_function(
-                parent_1.genes, parent_2.genes, self.param_number)
+                parent_1.genes, parent_2.genes, self.parameter_number)
 
         if can_mutate:
-            self.mutate_function(child_1.genes, self.param_number, self.param_range)
-            self.mutate_function(child_2.genes, self.param_number, self.param_range)
+            self.mutate_function(child_1.genes, self.parameter_number, self.parameter_range)
+            self.mutate_function(child_2.genes, self.parameter_number, self.parameter_range)
 
         append_individual_in_new_population(child_1, new_individual_list, new_individual_gene_list, can_mutate, can_crossover)
 
@@ -115,5 +121,5 @@ def create_individual_gene(self):
     :param self:
     :return:
     '''
-    return (np.random.random(self.param_number) * self.param_range).tolist()
+    return (np.random.random(self.parameter_number) * self.parameter_range).tolist()
 
