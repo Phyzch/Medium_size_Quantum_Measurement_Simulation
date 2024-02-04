@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt, gridspec as gridspec
 import simulate_energy_flow_between_photon_and_detector
 
 
-from include.util import rank, num_proc
+from include.util import rank
 
 
 def save_simulation_result(*args):
@@ -67,6 +67,8 @@ def output_full_system_state_and_coupling_info(full_system_instance):
         # print information about structure of system
         full_system_instance.output_state_qn_number_list()
         full_system_instance.detector1.output_detector_anharmonic_coupling_state_pairs()
+        full_system_instance.detector2.output_detector_anharmonic_coupling_state_pairs()
+
         full_system_instance.output_off_diagonal_coupling_state_pairs_info()
         print("parameter number for detector1: " + str(full_system_instance.detector1.show_offdiag_matrix_num()))
         print("parameter number for detector2: " + str(full_system_instance.detector2.show_offdiag_matrix_num()))
@@ -78,15 +80,15 @@ def output_full_system_state_and_coupling_info(full_system_instance):
 
 
 def plot_simulation_result(*args):
-    photon_energy_list, d1_energy_list_change, d2_energy_list_change, Time_list, file_path = args
+    photon_energy_list, d1_energy_list_change, d2_energy_list_change, time_list, file_path = args
     # configure fig, ax
     fig1 = plt.figure(figsize=(15, 15))
     spec = gridspec.GridSpec(nrows=1, ncols=1, figure=fig1)
     spec.update(hspace=0.5, wspace=0.3)
     ax1 = fig1.add_subplot(spec[0, 0])
-    ax1.plot(Time_list, d1_energy_list_change, label='left photon localization')
-    ax1.plot(Time_list, d2_energy_list_change, label='right photon localization')
-    ax1.plot(Time_list, photon_energy_list, label='photon energy')
+    ax1.plot(time_list, d1_energy_list_change, label='left photon localization')
+    ax1.plot(time_list, d2_energy_list_change, label='right photon localization')
+    ax1.plot(time_list, photon_energy_list, label='photon energy')
 
     ax1.set_xlabel('time')
     ax1.set_ylabel('E')

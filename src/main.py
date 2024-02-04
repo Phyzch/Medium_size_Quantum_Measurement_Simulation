@@ -15,7 +15,7 @@ home_directory = "/home/phyzch/PycharmProjects/Medium_size_Quantum_Measurement_s
 add_sys_path_list = [home_directory , os.path.join(home_directory , "src" )  ,
                      os.path.join(home_directory , "include/detector/"),
                      os.path.join(home_directory , "include/fullsystem/") ,
-                     os.path.join(home_directory , "include/genetic_algorithm_class/")]
+                     os.path.join(home_directory , "include/ExtendedGeneticAlgorithm/")]
 
 sys.path = sys.path + add_sys_path_list
 

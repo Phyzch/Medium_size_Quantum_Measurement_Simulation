@@ -3,7 +3,6 @@ from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 num_proc = comm.Get_size()
-import include.fullsystem.__init__
 
 def simulate_full_system_quantum_dynamics(full_system_instance, off_diagonal_coupling):
     '''
@@ -101,7 +100,7 @@ def decide_side_of_detector_energy_localization(highest_peak_bool,
     if we use the criterion of the highest peak energy (the side with the highest photon energy is decided as the side
     of localization, then highest_peak_bool = True.
     If highest_peak_bool = False, we choose the side of the localization according to the criteria:
-    which side show the earliest energy peak.
+    which side show the earliest energy peak.)
     :param highest_peak_bool: bool of the highest energy
     :param max_left_detector_energy_change: maximum energy change in the left detector.
     :param max_right_detector_energy_change:  maximum energy change in the right detector.
@@ -120,7 +119,6 @@ def decide_side_of_detector_energy_localization(highest_peak_bool,
             localization_side = "right"
     else:
         # --------- criteria : use earliest peak as criteria ------------
-        localization_bool = 0
         if len(left_detector_energy_peak_index) == 0:
             # first peak appear at right.
             localization_side = "right"
@@ -144,7 +142,7 @@ def analyze_peak_and_peak_duration(left_detector_energy_change, right_detector_e
     :param left_detector_energy_change: change of energy for l.h.s.
     :param right_detector_energy_change: change of energy for r.h.s.
     :param time_list: list of time.
-    :param highest_peak_bool : if bool == True, we choose highest peak as criteria for localization.
+    :param highest_peak_bool : if bool == True, we choose the highest peak as criteria for localization.
                                if bool == False, we choose first peak as criteria for localization.
     :return: first_peak_time_duration_ratio: ratio of the time for the first peak over the whole time duration.
              first_peak_maximum: maximum value of the first peak
@@ -158,8 +156,8 @@ def analyze_peak_and_peak_duration(left_detector_energy_change, right_detector_e
     max_energy_change = max(max_lhs_energy_change, max_rhs_change)
 
     # if we use first peak instead of highest peak as criteria. (highest_peak_bool == False)
-    # We first find highest peak.
-    # Then set ratio * highest peak as threshold to be treated as a peak. Then we find earliest peak in simulation.
+    # We first find the highest peak.
+    # Then set ratio * the highest peak as threshold to be treated as a peak. Then we find earliest peak in simulation.
     peak_criteria_ratio = 0.7
     criteria_for_peak = peak_criteria_ratio * max_energy_change
 

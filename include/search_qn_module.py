@@ -1,6 +1,3 @@
-import numpy as np
-
-
 def compare_quantum_number(quantum_number_1, quantum_number_2):
     dof = len(quantum_number_1)
     if dof != len(quantum_number_2):

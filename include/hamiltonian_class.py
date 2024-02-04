@@ -1,11 +1,10 @@
 import numpy as np
 
-class Hamiltonian():
-
+class Hamiltonian:
     def __init__(self):
         '''
         a base class for Hamiltonian:
-        All rol, column, and matrix should be private memeber to limit its exposure to outside functions.
+        All rol, column, and matrix should be private member to limit its exposure to outside functions.
         '''
         # irow : row index for Hamiltonian
         self._irow = []

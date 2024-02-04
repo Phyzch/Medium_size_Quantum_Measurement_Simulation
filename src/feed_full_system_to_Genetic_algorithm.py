@@ -2,7 +2,7 @@ import numpy as np
 
 import include.fullsystem.__init__
 
-import include.genetic_algorithm_class.__init__
+from include.ExtendedGeneticAlgorithm import ExtendedGeneticAlgorithm
 import simulate_energy_flow_between_photon_and_detector
 import include.util
 from mpi4py import MPI
@@ -62,8 +62,8 @@ def implement_genetic_algorithm(file_path):
     if rank == 0:
         output_simulation_result.output_full_system_state_and_coupling_info(full_system_instance)
 
-    # parameter_number is number of parameter to be optimized in Genetic algorithm.
-    parameter_number = off_diag_coupling_num =  full_system_instance.show_offdiag_matrix_num()
+    # parameter_number is number of off-diagonal coupling parameter numbers to be optimized in Genetic algorithm.
+    parameter_number  =  full_system_instance.show_offdiag_matrix_num()
 
     # Prepare parameter for genetic algorithm
     parameter_list = [coupling_parameter_range , full_system_instance, parameter_number , highest_peak_bool]
@@ -73,11 +73,8 @@ def implement_genetic_algorithm(file_path):
     f2 = set_simulation_input_param.prepare_genetic_algorithm_info_file(file_path, population_size_each_process, population_size_over_all_process)
 
     # ---------------------- initialize Genetic algorithm and drun Genetic algorithm. ---------------------------------------
-    ga  = include.genetic_algorithm_class.__init__.ExtendGeneticAlgorithm(parameter_list, population_size = population_size_each_process, generations = generations, crossover_probability = crossover_prob, mutation_probability = mutation_prob,
+    ga  = ExtendedGeneticAlgorithm.ExtendGeneticAlgorithm(parameter_list, population_size = population_size_each_process, generations = generations, crossover_probability = crossover_prob, mutation_probability = mutation_prob,
                                  elitism = True, maximise_fitness = True, immigration_population_ratio= immigrate_population_ratio, immigrantion_rate= immigration_rate, info_file = f2)
-
-    # customized fitness function for genetic algorithm.
-    ga.fitness_function = simulate_energy_flow_between_photon_and_detector.fitness_function_for_individual_full_system_instance
 
     ga.run()
 

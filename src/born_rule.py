@@ -28,12 +28,12 @@ def set_detector_param():
     d2_energy_window = 1
     d2_state_coupling_energy_window = 10000 # no constraint now.
 
-    Detector_1_parameter = dof, frequency1, nmax1, initial_d_state1, d1_energy_window , d1_state_coupling_energy_window
-    Detector_2_parameter = dof, frequency2, nmax2, initial_d_state2, d2_energy_window , d2_state_coupling_energy_window
+    detector_1_parameter = dof, frequency1, nmax1, initial_d_state1, d1_energy_window , d1_state_coupling_energy_window
+    detector_2_parameter = dof, frequency2, nmax2, initial_d_state2, d2_energy_window , d2_state_coupling_energy_window
 
-    return Detector_1_parameter , Detector_2_parameter
+    return detector_1_parameter , detector_2_parameter
 
-def Analyze_Born_rule(file_path):
+def analyze_born_rule(file_path):
     # preview : True, see wave function figure. False, do batch simulation
     # before do batch simulation, we should preview simulation result and change time step, simulation time , coupling strength etc.
     preview = True
@@ -52,14 +52,14 @@ def Analyze_Born_rule(file_path):
     initial_photon_wavefunction = [np.sqrt(1) / np.sqrt(3), np.sqrt(2) / np.sqrt(3)]
 
     # -------- parameter for detector -----------
-    Detector_1_parameter, Detector_2_parameter = set_detector_param()
+    detector_1_parameter, detector_2_parameter = set_detector_param()
 
     # - -------  specify input paramter for full system  (photon + detector)  ----------------
     # include state in full system (photon + detector) which satisfy energy condition  E - E_init <= energy window
     full_system_energy_window = 0
 
     # full system 's construct_full_system_Hamiltonian_part2() is called within fitness function in each cycle of genetic algorithm.
-    full_system_instance = FullSystem(Detector_1_parameter, Detector_2_parameter, full_system_energy_window,
+    full_system_instance = FullSystem(detector_1_parameter, detector_2_parameter, full_system_energy_window,
                                       photon_energy, initial_photon_wavefunction)
 
     full_system_instance.construct_full_system_hamiltonian_diagonal_part()
@@ -79,7 +79,7 @@ def Analyze_Born_rule(file_path):
     iteration_number_per_core = int (iteration_number / num_proc)
     iteration_number = iteration_number_per_core * num_proc
 
-    if(preview):
+    if preview:
         plot_trail_simulation_result(full_system_instance, coupling_parameter_range, parameter_number, file_path, save_preview_bool)
     else:
         for i in range(iteration_number_per_core):
@@ -92,10 +92,10 @@ def Analyze_Born_rule(file_path):
             _, max_energy_change, _, localization_bool = analyze_peak_and_peak_duration(
                 d1_energy_list_change, d2_energy_list_change, time_list , highest_peak_bool= highest_peak_bool)
 
-            if(localization_bool == 1):
+            if localization_bool == 1:
                 left_localization_num = left_localization_num + 1
 
-            if (localization_bool == 2 ):
+            if localization_bool == 2:
                 right_localization_num = right_localization_num + 1
 
             parameter_list.append(coupling_param)
@@ -107,7 +107,7 @@ def Analyze_Born_rule(file_path):
         max_energy_change_list = broadcast_data(max_energy_change_list, num_proc)
         localization_side_list = broadcast_data(localization_side_list, num_proc)
 
-        Analyze_Localization_prob( max_energy_change_list, localization_side_list, parameter_list, initial_photon_wavefunction, iteration_number_per_core, iteration_number, file_path)
+        analyze_localization_prob(max_energy_change_list, localization_side_list, parameter_list, initial_photon_wavefunction, iteration_number_per_core, iteration_number, file_path)
 
 
 def plot_trail_simulation_result(full_system_instance, coupling_parameter_range, parameter_number, file_path, save_preview_bool ):
@@ -144,8 +144,8 @@ def plot_trail_simulation_result(full_system_instance, coupling_parameter_range,
         plt.show()
 
 
-def Analyze_Localization_prob( max_energy_change_list, localization_side_list, parameter_list, psi0, iteration_number_per_core, iteration_number, file_path):
-    if (rank == 0):
+def analyze_localization_prob(max_energy_change_list, localization_side_list, parameter_list, psi0, iteration_number_per_core, iteration_number, file_path):
+    if rank == 0:
         sample_num = len(localization_side_list)
 
         left_side_sample_num = 0
@@ -167,7 +167,7 @@ def Analyze_Localization_prob( max_energy_change_list, localization_side_list, p
         right_max_energy_change_list = [max_energy_change_list[i] for i in range(len(max_energy_change_list)) if
                                         localization_side_list[i] == 2]
 
-        Born_prob = np.power(psi0 , 2)
+        born_prob = np.power(psi0 , 2)
 
 
         # compute localization probability after we sift result with maximum energy criteria.
@@ -175,7 +175,7 @@ def Analyze_Localization_prob( max_energy_change_list, localization_side_list, p
             = compute_localization_prob_satisfy_criteria(left_localization_energy_list , right_localization_energy_list)
 
         # print information to screen
-        print_info(iteration_number , iteration_number_per_core , psi0, Born_prob, left_side_prob, right_side_prob , sample_num ,
+        print_info(iteration_number , iteration_number_per_core , psi0, born_prob, left_side_prob, right_side_prob , sample_num ,
                    max_energy_change_list, left_max_energy_change_list , right_max_energy_change_list)
 
         # output localization info
@@ -223,7 +223,7 @@ def compute_localization_prob_satisfy_criteria(left_localization_energy_list , r
 
 def print_info(*args):
 
-    iteration_number , iteration_number_per_core , psi0, Born_prob, left_side_prob, right_side_prob , sample_num ,\
+    iteration_number , iteration_number_per_core , psi0, born_prob, left_side_prob, right_side_prob , sample_num ,\
     max_energy_change_list, left_max_energy_change_list , right_max_energy_change_list = args
 
     print('number of core:  ')
@@ -236,7 +236,7 @@ def print_info(*args):
     print(iteration_number_per_core)
 
     print("wave function: " + str(psi0))
-    print("Born rule prob (theoretical):  " + str(Born_prob))
+    print("Born rule prob (theoretical):  " + str(born_prob))
     print("Left side prob:  " + str(left_side_prob))
     print("Right side prob: " + str(right_side_prob))
     print('total sample number ' + str(sample_num))
@@ -286,7 +286,6 @@ def output_param(parameter_list, file_path):
 
 def output_localization_param_and_max_energy_change( psi0, max_energy_change_list , localization_side_list , parameter_list , file_name , file_path , localization_symbol):
     '''
-
     :param psi0:
     :param max_energy_change_list:
     :param localization_side_list:
@@ -306,7 +305,7 @@ def output_localization_param_and_max_energy_change( psi0, max_energy_change_lis
 
         parameter_list_len = len(max_energy_change_list)
         for i in range(parameter_list_len):
-            if (localization_side_list[i] ==  localization_symbol ):
+            if localization_side_list[i] ==  localization_symbol :
                 parameter = parameter_list[i]
                 for j in parameter:
                     f2.write(str(j) + ' ')
