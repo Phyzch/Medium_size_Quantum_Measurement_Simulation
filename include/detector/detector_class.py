@@ -5,7 +5,8 @@ import include.hamiltonian_class
 class Detector(include.hamiltonian_class.Hamiltonian):
 
     def __init__(self , *args):
-        include.hamiltonian_class.Hamiltonian.__init__(self)
+        # initialize parent class.
+        super().__init__()
 
         dof, frequency, nmax, initial_state_qn, energy_window_for_basis_set, energy_window_for_coupling = args
 
@@ -19,14 +20,14 @@ class Detector(include.hamiltonian_class.Hamiltonian):
         self._energy_window_for_basis_set_state = energy_window_for_basis_set
 
         # define the constraints we put in for constructing anharmonic coupling between vibrational states.
-        # energy_window_for_coupling: only states with energy difference smaller than energy window is
+        # energy_window_for_coupling: only states with energy difference smaller than energy_window_for_coupling is
         #                                            coupled to each other
         # qn_diff_cutoff: only states with 1-norm quantum number distance smaller than qn_diff_cutoff is
         #                                coupled to each other. 1-norm: \sum |n_i - n_j|
         self._energy_window_for_coupling = energy_window_for_coupling
         self._qn_diff_cutoff = 4
 
-        # initial_state_qn : initial vibrational states of detector.
+        # initial_state_qn : initial vibrational states of the detector.
         # initial_state_index: index of the initial state in the basis set.
         self._initial_state_qn = np.copy(initial_state_qn)
         self._initial_state_index = -1
@@ -46,18 +47,19 @@ class Detector(include.hamiltonian_class.Hamiltonian):
         The quantum number (q.n.) of the initial state is defined by self.initial_state
         :return:
         '''
-        init_state_pos, exist = include.search_qn_module.binary_search_qn_list(self._basis_set_state_qn_list, self._initial_state_qn)
-        if not exist:
-            raise NameError("Wrong . Initial state not in state space")
+        init_state_index, exist = include.search_qn_module.binary_search_qn_list(self._basis_set_state_qn_list,
+                                                                               self._initial_state_qn)
+
+        assert exist, "Wrong . Initial state not in state space"
 
         # record the index of initial state in basis set.
-        self._initial_state_index = init_state_pos
+        self._initial_state_index = init_state_index
 
         # initialize the wave function.
         self._wave_function = np.zeros(self._basis_set_state_num, dtype = np.complex)
-        self._wave_function[init_state_pos] = 1
+        self._wave_function[init_state_index] = 1
 
-    # ----- add basis set state to detector ----------------------------------------
+    # ----- add basis set state to the detector instance ----------------------------------------
     def detector_add_basis_set_state(self, state_quantum_number, state_energy, position):
         '''
         add basis set state to the list: _basis_set_state_qn_list, _basis_set_state_energy_list
@@ -76,10 +78,11 @@ class Detector(include.hamiltonian_class.Hamiltonian):
 
     '''
     part I of constructing detector Hamiltonian. 
-    We construct : 1. state 2. Hamiltonian diagonal part  3. irow, icol for coupling between states in Hamiltonian. 
-    in part II, we will add strength of coupling between states (get from Genetic algorithm)
+    We construct : 1. basis set state 2. diagonal part of Hamiltonian 
+    3. irow, icol for off-diagonal coupling between states in Hamiltonian. 
+    in part II, we will add strength of couplings between states (parameter to optimize using Genetic algorithm)
     '''
-    def construct_detector_Hamiltonian_structure(self):
+    def construct_detector_hamiltonian_structure(self):
         '''
         decide the basis set states and how they are coupled to each other.
         off-diagonal coupling should read from Genetic algorithm part
@@ -88,13 +91,13 @@ class Detector(include.hamiltonian_class.Hamiltonian):
         :return:
         '''
 
-        # construct state's Hamiltonian diagonal part
-        self._construct_detector_Hamiltonian_diagonal_part()
+        # construct states' Hamiltonian diagonal part
+        self._construct_detector_hamiltonian_diagonal_part()
 
-        # calculate state's anharmonic coupling
+        # calculate states' anharmonic coupling
         self._construct_offdiag_detector_state_coupling()
 
-    def _construct_detector_Hamiltonian_diagonal_part(self):
+    def _construct_detector_hamiltonian_diagonal_part(self):
         '''
         construct basis set state and diagonal part of Hamiltonian for detectors.
         :return:
@@ -108,7 +111,7 @@ class Detector(include.hamiltonian_class.Hamiltonian):
         quantum_number = np.zeros(self._dof)
         quantum_number[0] = -1
 
-        initial_state_qn = np.array(self._initial_state_qn)
+        initial_state_qn = np.copy(self._initial_state_qn)
         initial_state_energy = np.sum(initial_state_qn * self._frequency)
 
         # Define a loop to go through states available in state space:
@@ -127,11 +130,12 @@ class Detector(include.hamiltonian_class.Hamiltonian):
             if exit_loop_bool:
                 break
 
-            # --------- Check if this state is outside energy window, if so , jump to valid state -------------
+            # --------- Check if this state is outside energy window,
+            # if so , jump to next state whose energy is smaller -------------
             energy = np.sum(quantum_number * self._frequency)
             if energy > self._energy_window_for_basis_set_state + initial_state_energy:
                 k = 0
-                # jump to next state whose energy is smaller than initial_state_energy + energy_window
+                # jump to next state whose energy is smaller than (initial_state_energy + energy_window)
                 while quantum_number[k] == 0:
                     quantum_number[k] = self._nmax[k]
                     k = k + 1
@@ -153,19 +157,20 @@ class Detector(include.hamiltonian_class.Hamiltonian):
         self._basis_set_state_num = len(self._basis_set_state_energy_list)
 
         # construct diagonal part of the hamiltonian.
-        self._add_hamiltonian_diagonal_part()
+        self._add_basis_set_energy_to_hamiltonian_diagonal_part()
 
     def _construct_offdiag_detector_state_coupling(self):
         '''
         As off-diagonal coupling strength is read from Genetic algorithm.
-        we should calculate off-diagonal coupling number and output it
+        in this function, we compute # of off-diagonal coupling and provide the number to Genetic algorithm.
         :return:
         '''
-
+        # hamiltonian's offdiagonal element's value should be optimized using Genetic algorithm.
         offdiag_hamiltonian_init_value = -1.0
 
         for i in range(self._basis_set_state_num):
             for j in range(i + 1, self._basis_set_state_num):
+                # notice here we only record 1 off-diagonal matrix element (i,j). We do not include element (j,i).
                 state1_qn = self._basis_set_state_qn_list[i]
                 state2_qn = self._basis_set_state_qn_list[j]
 
@@ -212,11 +217,11 @@ class Detector(include.hamiltonian_class.Hamiltonian):
     '''
     construct off-diagonal coupling value of the Hamiltonian.
     '''
-
     def construct_offdiag_coupling_value(self, offdiag_coupling_element_list):
         '''
         Now we get value of off-diagonal matrix element.
         The row and column index of coupling matrix element is defined in _construct_diagonal_Hamiltonian.py
+        :param: offdiag_coupling_element_list: off-diagonal coupling
         :return:
         '''
 
@@ -233,7 +238,7 @@ class Detector(include.hamiltonian_class.Hamiltonian):
         # dirow, dicol is already add in list in calculate_offdiag_coupling_num(self). d_H here is list.
         assert(type(self._mat) == list and type(self._offdiag_coupling_element_list) == list)
         for i in range(self._offdiagonal_coupling_num):
-            self._mat[i] = self._offdiag_coupling_element_list[i + self._basis_set_state_num]
+            self._mat[i + self._basis_set_state_num] = self._offdiag_coupling_element_list[i]
 
 
     '''
@@ -303,7 +308,7 @@ class Detector(include.hamiltonian_class.Hamiltonian):
             state_qn_pair_for_anharmonic_coupling.append(quantum_number_pair_of_anharmonic_coupling)
 
         # output the info of anharmonic coupling.
-        print("detector Coupling: ")
+        print("detector coupling: \n")
         list_len = len(state_qn_pair_for_anharmonic_coupling)
 
         for i in range(list_len):

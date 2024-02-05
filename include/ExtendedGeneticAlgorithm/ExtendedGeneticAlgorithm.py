@@ -162,27 +162,29 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
                crossover, and mutation) supplied.
         """
 
-        def append_individual_in_new_population(individual, new_individual_list, new_individual_gene_list, mutate_bool,
+        def append_individual_in_new_population(individual, new_individual_list1, new_individual_gene_list1, mutate_bool,
                                                 crossover_bool):
             '''
 
             :param individual: individual in population for genetic algorithm
             :type: individual: chromosome
-            :param new_individual_list: a list of new individual chromosome
-            :param new_individual_gene_list: The gene of new individuals
+            :param new_individual_list1: a list of new individual chromosome
+            :param new_individual_gene_list1: The gene of new individuals
             :param mutate_bool: if True, mutate the genes.
             :param crossover_bool: if True, do crossover to genes
             :return:
             '''
             # we should not have the same genes in one generation, this may lead us go to local minimum
-            if not (individual.genes in new_individual_gene_list):
+            if not (individual.genes in new_individual_gene_list1):
                 if mutate_bool or crossover_bool:
                     # only re-compute fitness function if there is a need for mutation or crossover.
                     # in the program, we will only recompute fitness function when it is 0.
                     individual.fitness = 0
 
-                new_individual_list.append(individual)
-                new_individual_gene_list.append(individual.genes)
+                new_individual_list1.append(individual)
+                new_individual_gene_list1.append(individual.genes)
+
+
 
         new_individual_list = []  # list of individual chromosome for new generation.
         new_individual_gene_list = []  # list of individual chromosome's gene for new generation.
@@ -202,11 +204,11 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
 
             if can_crossover:
                 child_1.genes, child_2.genes = self.crossover_function(
-                    parent_1.genes, parent_2.genes, self.parameter_number)
+                    parent_1.genes, parent_2.genes)
 
             if can_mutate:
-                self.mutate_function(child_1.genes, self.parameter_number, self.parameter_range)
-                self.mutate_function(child_2.genes, self.parameter_number, self.parameter_range)
+                self.mutate_function(child_1.genes)
+                self.mutate_function(child_2.genes)
 
             append_individual_in_new_population(child_1, new_individual_list, new_individual_gene_list, can_mutate,
                                                 can_crossover)
@@ -329,16 +331,15 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
     Used to generate the child generation.
     '''
 
-    def crossover_function(self,parent_1, parent_2, parameter_number):
+    def crossover_function(self,parent_1, parent_2):
         '''
         cross over function for continuous variable.
         :param parent_1: individual chromosome for crossover
         :param parent_2: individual chromosome for crossover
-        :param parameter_number: number of parameters for crossover
         :return:
         '''
         # rn in range [0,1]
-        rn = np.random.random([parameter_number])
+        rn = np.random.random([self.parameter_number])
 
         parent_1_array = np.array(parent_1)
         parent_2_array = np.array(parent_2)
@@ -351,17 +352,15 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
 
         return child_1, child_2
 
-    def mutate_function(self,gene, parameter_number, parameter_range):
+    def mutate_function(self, gene):
         '''
         mutate function for continuous variable. change one variable to random number
         :param gene: individual gene to do mutation
-        :param parameter_number: number of parameters for mutation.
-        :param parameter_range: range of parameter to perform mutation.
         :return:
         '''
         rn = random.random()
-        mutate_index = random.randrange(parameter_number)
-        gene[mutate_index] = rn * parameter_range
+        mutate_index = random.randrange(self.parameter_number)
+        gene[mutate_index] = rn * self.parameter_range
 
 
 

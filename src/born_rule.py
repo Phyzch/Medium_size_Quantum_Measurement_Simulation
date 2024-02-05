@@ -39,7 +39,7 @@ def analyze_born_rule(file_path):
     preview = True
     save_preview_bool = True
 
-    # use highest peak as criteria for localization.
+    # use the highest peak as criteria for localization.
     highest_peak_bool = False
 
     iteration_number = 1000
@@ -62,7 +62,7 @@ def analyze_born_rule(file_path):
     full_system_instance = FullSystem(detector_1_parameter, detector_2_parameter, full_system_energy_window,
                                       photon_energy, initial_photon_wavefunction)
 
-    full_system_instance.construct_full_system_hamiltonian_diagonal_part()
+    full_system_instance.construct_full_system_hamiltonian_structure()
 
     # print information about structure of system
     output_full_system_state_and_coupling_info(full_system_instance)

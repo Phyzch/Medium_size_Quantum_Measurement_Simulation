@@ -4,7 +4,7 @@ import re
 import numpy as np
 import matplotlib.gridspec as gridspec
 
-def Read_Energy_list(file_path):
+def read_energy_list(file_path):
     with open(file_path) as f:
         data = f.read().splitlines()
         datalen = len(data)
@@ -28,17 +28,17 @@ def Read_Energy_list(file_path):
 
         return localization_energy_list , wave_func
 
-def Read_left_right_energy_list(folder_path):
+def read_left_right_energy_list(folder_path):
     left_file_path = os.path.join(folder_path, "localization_parameter_list_left.txt")
     right_file_path = os.path.join(folder_path , "localization_parameter_list_right.txt")
 
-    left_localization_energy_list, wave_func = Read_Energy_list(left_file_path)
-    right_localization_energy_list , wave_func = Read_Energy_list(right_file_path)
+    left_localization_energy_list, wave_func = read_energy_list(left_file_path)
+    right_localization_energy_list , wave_func = read_energy_list(right_file_path)
 
     return left_localization_energy_list , right_localization_energy_list , wave_func
 
-def Analyze_left_right_localization_dist(folder_path):
-    left_localization_energy_list, right_localization_energy_list, wave_func = Read_left_right_energy_list(folder_path)
+def analyze_left_right_localization_dist(folder_path):
+    left_localization_energy_list, right_localization_energy_list, wave_func = read_left_right_energy_list(folder_path)
 
     theoretical_localization_prob = [ pow(i,2) for i in wave_func]
 

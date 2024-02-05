@@ -56,7 +56,8 @@ def implement_genetic_algorithm(file_path):
     full_system_instance = include.fullsystem.__init__.FullSystem(detector_1_parameter, detector_2_parameter, full_system_basis_set_energy_window,
                                       photon_energy, initial_photon_wavefunction,
                                       time_duration = time_duration, output_time_step = output_time_step)
-    full_system_instance.construct_full_system_hamiltonian_diagonal_part()
+
+    full_system_instance.construct_full_system_hamiltonian_structure()
 
     # print information about structure of system
     if rank == 0:

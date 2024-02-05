@@ -6,6 +6,7 @@ class Hamiltonian:
         a base class for Hamiltonian:
         All rol, column, and matrix should be private member to limit its exposure to outside functions.
         '''
+        # we choose coordinate list (COO) form to store sparse matrix.
         # irow : row index for Hamiltonian
         self._irow = []
         # icol: column index for Hamiltonian
@@ -13,16 +14,14 @@ class Hamiltonian:
         # mat: matrix value for Hamiltonian.
         self._mat = []
 
-        self._mat_array = np.zeros(1)
-        self._irow_array = np.zeros(1)
-        self._icol_array = np.zeros(1)
-
-        # diag_mat : diagonal part of matrix
+        # diagonal_mat : diagonal part of matrix
         self._diagonal_mat = []
-        # number of states & energy of the state
+
+        # number of states & energy of basis set states
         self._basis_set_state_num = 0
         self._basis_set_state_energy_list = []
 
+        # total number of sparse matrix.
         self._mat_num = 0
 
         # off-diagonal couplings between basis set states.
@@ -44,7 +43,7 @@ class Hamiltonian:
         self._irow.append(irow_index)
         self._icol.append(icol_index)
 
-    def _add_hamiltonian_diagonal_part(self):
+    def _add_basis_set_energy_to_hamiltonian_diagonal_part(self):
         '''
         construct diagonal part of the hamiltonian.
         :return:
@@ -116,21 +115,21 @@ class Hamiltonian:
         show numpy array of hamiltonian matrix
         :return:
         '''
-        return np.copy(self._mat_array)
+        return np.copy(self._mat)
 
     def get_irow_array(self):
         '''
         show numpy array of the row index
         :return:
         '''
-        return np.copy(self._irow_array)
+        return np.copy(self._irow)
 
     def get_icol_array(self):
         '''
         show numpy array of the column index
         :return:
         '''
-        return np.copy(self._icol_array)
+        return np.copy(self._icol)
 
     def replace_mat_value(self, i, value):
         '''
@@ -146,6 +145,8 @@ class Hamiltonian:
         convert matrix , irow, icol into numpy array.
         :return:
         '''
-        self._mat_array = np.array(self._mat)
-        self._irow_array = np.array(self._irow)
-        self._icol_array = np.array(self._icol)
+        mat_array = np.array(self._mat)
+        irow_array = np.array(self._irow)
+        icol_array = np.array(self._icol)
+
+        return mat_array, irow_array, icol_array

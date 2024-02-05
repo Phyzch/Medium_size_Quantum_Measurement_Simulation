@@ -1,5 +1,4 @@
 import numpy as np
-
 from numba import jit
 
 '''
@@ -9,6 +8,8 @@ Evolve Hamiltonian on basis set and compute energy of photon & detectors.
 @jit(nopython = True)
 def wave_func_sum(array_sum, part_add, row_index):
     '''
+    Here we need to use numba to pre-compile the code. Otherwise, doing this calculation use CPython will be very slow.
+    This is because I can not vectorize this part of the code.
     original_value [ index[i] ] = original_value [ index[i] ] + part_add[i]
     :param: array_value: value of the array.
     :param: part_add: the part we need to add
