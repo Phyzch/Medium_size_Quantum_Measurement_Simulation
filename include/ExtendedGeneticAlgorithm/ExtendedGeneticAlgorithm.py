@@ -34,7 +34,7 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
                  maximise_fitness=True,
                  info_file = None):
         '''
-        For fitness function:  fitness_function (gene, seed_data)
+        to use fitness function:  fitness_function (gene, seed_data)
 
         :param seed_data: input data to the Genetic Algorithm
         seed_data = [coupling_parameter_range, full_system_instance, parameter_number, highest_peak_bool]
@@ -45,7 +45,7 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
         :param mutation_probability: probability of mutation operation
         :param immigration_population_ratio: ratio of population for immigration.
         :param immigrantion_rate: rate / frequency of immigration.
-        :param elitism: bool. if true, the best individual is not disgarded.
+        :param elitism: bool. if true, the best individual is not discarded.
         :param maximise_fitness: bool. If true, rank the individual by descending order according to fitness value.
         :param info_file:
 
@@ -62,7 +62,7 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
         self.previous_genes = []
         self.previous_fitness = []
 
-        # different process have to change individuals (some individual immigrate to other process )
+        # different process have to exchange individuals (some individual immigrate to other process )
         self.immigrate_rate = immigrantion_rate
 
         # immigrate_generation : do immigration if generation_num % immigrate_generation == 0.
@@ -97,7 +97,7 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
         for generation_number in range(1, self.generations):
             start_time = timer()
 
-            # Immigrate function
+            # Immigrate generations to other processes
             if generation_number % self.immigrate_generation == 0:
                 self.immigrate_population()
 
@@ -113,7 +113,6 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
         return self.current_generation.copy()
 
 
-
     '''
     code to create first generation and next generation for genetic algorithm.
     '''
@@ -124,7 +123,6 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
         :param self:
         :return:
         '''
-        # We may also read parameter from previous simulation if we set bool_Read_parameter == True
         self.create_initial_population()
         # compute fitness function for individuals in population ensemble
         self.calculate_population_fitness()
@@ -183,8 +181,6 @@ class ExtendGeneticAlgorithm(pyeasyga.GeneticAlgorithm):
 
                 new_individual_list1.append(individual)
                 new_individual_gene_list1.append(individual.genes)
-
-
 
         new_individual_list = []  # list of individual chromosome for new generation.
         new_individual_gene_list = []  # list of individual chromosome's gene for new generation.

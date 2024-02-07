@@ -16,7 +16,7 @@ num_proc = comm.Get_size()
 
 
 def implement_genetic_algorithm(file_path):
-    coupling_parameter_range = 0.01  # the coupling decides the timescale for the localization
+    coupling_parameter_range = 0.01  # the coupling range decides the timescale for the localization
 
     highest_peak_bool = True # fixme: need explanation
 
@@ -103,8 +103,8 @@ def evaluate_simulation_result(*args):
     last_generation_gene = [member.genes for member in last_generation]
 
     # Broadcast fitness function and paramter to all process
-    genes_for_all = include.util.broadcast_data(last_generation_gene, num_proc)
-    fitness_for_all = include.util.broadcast_data(np.real(last_generation_fitness_func), num_proc)
+    genes_for_all = include.util.gather_and_broadcast_data(last_generation_gene, num_proc)
+    fitness_for_all = include.util.gather_and_broadcast_data(np.real(last_generation_fitness_func), num_proc)
 
     if rank == 0:
         print('num of proc: ' + str(num_proc))

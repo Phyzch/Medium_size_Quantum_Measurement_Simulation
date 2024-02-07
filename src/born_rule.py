@@ -7,7 +7,7 @@ from simulate_energy_flow_between_photon_and_detector import simulate_full_syste
 
 from include.fullsystem.__init__ import FullSystem
 from output_simulation_result import output_full_system_state_and_coupling_info
-from include.util import broadcast_data
+from include.util import gather_and_broadcast_data
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
@@ -103,9 +103,9 @@ def analyze_born_rule(file_path):
             localization_side_list.append(localization_bool)
 
         # Broadcast data to all process.
-        parameter_list = broadcast_data(parameter_list, num_proc)
-        max_energy_change_list = broadcast_data(max_energy_change_list, num_proc)
-        localization_side_list = broadcast_data(localization_side_list, num_proc)
+        parameter_list = gather_and_broadcast_data(parameter_list, num_proc)
+        max_energy_change_list = gather_and_broadcast_data(max_energy_change_list, num_proc)
+        localization_side_list = gather_and_broadcast_data(localization_side_list, num_proc)
 
         analyze_localization_prob(max_energy_change_list, localization_side_list, parameter_list, initial_photon_wavefunction, iteration_number_per_core, iteration_number, file_path)
 
